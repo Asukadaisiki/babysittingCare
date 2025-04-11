@@ -1,7 +1,28 @@
 <!--index.wxml-->
-
 <view class="container">
-  <text>请选择您进入小程序的身份</text>
-  <button data-role="parents" bindtap="chooseRole" >普通用户</button>
-  <button data-role="doctor" bindtap="chooseRole">医护人员</button>
+  <view class="welcome">
+    <image class="logo" src="/images/logo.svg" mode="aspectFit"></image>
+    <text class="title">欢迎使用早护通</text>
+    <text class="subtitle">请选择您的身份</text>
+  </view>
+  
+  <view class="role-buttons">
+    <button 
+      class="parent-btn" 
+      data-role="parents" 
+      bindtap="chooseRole"
+    >
+      <image class="btn-icon" src="/images/parent-icon.svg"></image>
+      <text>家长端</text>
+    </button>
+    
+    <button 
+      class="nurse-btn" 
+      data-role="doctor" 
+      bindtap="chooseRole"
+    >
+      <image class="btn-icon" src="/images/nurse-icon.svg"></image>
+      <text>护士端</text>
+    </button>
+  </view>
 </view>
