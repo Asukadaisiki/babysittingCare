@@ -1,4 +1,5 @@
 <!--index.wxml-->
+<image class="background-image" src="/images/background1.png" mode="aspectFill"></image>
 <view class="container">
   <view class="welcome">
     <image class="logo" src="/images/logo.svg" mode="aspectFit"></image>
