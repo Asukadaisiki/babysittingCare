@@ -12,3 +12,23 @@ $RECYCLE.BIN/
 
 # Node.js
 node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# Environment variables
+.env
+.env.local
+
+# Build output
+dist/
+
+# Logs
+logs/
+*.log
+
+# System Files
+*.swp
+*.swo
+*~
