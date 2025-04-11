@@ -14,6 +14,9 @@ App({
     })
   },
   globalData: {
-    userInfo: null
+    userInfo: null,
+    role: null // 'user' or 'doctor',
   }
+
 })
+
