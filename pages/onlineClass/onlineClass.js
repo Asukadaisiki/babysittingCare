@@ -1,66 +1,52 @@
-// pages/onlineClass/onlineClass.js
 Page({
-
-  /**
-   * 页面的初始数据
-   */
   data: {
-
+    searchText: '',
+    // 视频数据改为一维数组
+    videoGroups: [
+      { id: 1, title: '宝宝喂养技巧', cover: '/images/onlineClass/bbwy.jpg' },
+      { id: 2, title: '婴儿常见疾病预防', cover: '/images/onlineClass/jbyf.jpg' },
+      { id: 3, title: '新生儿护理指南', cover: '/images/onlineClass/hlzn.jpg' }
+    ],
+    // 文章数据改为一维数组
+    articleGroups: [
+      { id: 1, title: '0-3岁宝宝成长关键期', cover: '/images/onlineClass/cjgjq.jpg' },
+      { id: 2, title: '如何应对宝宝挑食问题', cover: '/images/onlineClass/tswt.jpg' },
+      { id: 3, title: '婴儿湿疹的护理方法', cover: '/images/onlineClass/szhl.jpg' }
+    ]
+  },
+  
+  onLoad: function () {
+    this.fetchPageData();
   },
 
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-
+  fetchPageData: function () {
+    console.log('获取页面数据');
   },
 
-  /**
-   * 生命周期函数--监听页面初次渲染完成
-   */
-  onReady() {
-
+  onSearchInput: function (e) {
+    this.setData({
+      searchText: e.detail.value
+    });
   },
 
-  /**
-   * 生命周期函数--监听页面显示
-   */
-  onShow() {
-
+  clearSearch: function () {
+    this.setData({
+      searchText: ''
+    });
   },
 
-  /**
-   * 生命周期函数--监听页面隐藏
-   */
-  onHide() {
-
+  navigateToVideoDetail: function (e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/videoDetail/videoDetail?id=${id}`
+    });
   },
 
-  /**
-   * 生命周期函数--监听页面卸载
-   */
-  onUnload() {
-
-  },
-
-  /**
-   * 页面相关事件处理函数--监听用户下拉动作
-   */
-  onPullDownRefresh() {
-
-  },
-
-  /**
-   * 页面上拉触底事件的处理函数
-   */
-  onReachBottom() {
-
-  },
-
-  /**
-   * 用户点击右上角分享
-   */
-  onShareAppMessage() {
-
+  navigateToArticleDetail: function (e) {
+    const id = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/articleDetail/articleDetail?id=${id}`
+    });
   }
 })
+  
