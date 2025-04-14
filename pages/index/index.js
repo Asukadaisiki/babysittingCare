@@ -14,23 +14,21 @@ Page({
   },
 
 chooseRole(e) {
-    const role = e.currentTarget.dataset.role; // 获取 data-role 值
-   
-    // 根据角色跳转到不同页面
-    switch (role) {
-      case 'parents':
-        wx.navigateTo({
-            url: '/pages/Loading-parents/Loading-parents' 
-        }) // 普通用户页面路径
-        break;
-      case 'doctor':
-        wx.navigateTo({
-            url: '/pages/Loading-doctor/Loading-doctor'
-        }) 
-        break; // 医护人员页面路径
-      default:
-        wx.showToast({ title: '未知身份', icon: 'none' });
-        return;
+    const role = e.currentTarget.dataset.role;
+    
+    // 检查是否首次登录
+    const isFirstLogin = !wx.getStorageSync('userInfo');
+    
+    if (isFirstLogin && role === 'parents') {
+      // 首次登录，跳转到信息收集页面
+      wx.navigateTo({
+        url: `/pages/info-collection/info-collection?role=${role}`
+      });
+    } else {
+      // 非首次登录，直接跳转到首页
+      wx.switchTab({
+        url: '/pages/home/home'
+      });
     }
 
   },
