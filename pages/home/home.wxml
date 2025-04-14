@@ -1,5 +1,37 @@
 <!--pages/home/home.wxml-->
-<!-- 页面的 .wxml 文件 -->
-
-<text>pages/home/home.wxml</text>
+<view class="container">
+  <view class="header">
+    <text class="title">宝宝生长曲线</text>
+  </view>
+  
+  <view class="chart-container">
+    <canvas canvas-id="growth-chart" class="growth-chart"></canvas>
+  </view>
+  
+  <view class="data-section">
+    <view class="data-item">
+      <text>身高: {{children[0].height}}cm</text>
+      <text class="comparison">{{heightComparison}}</text>
+    </view>
+    <view class="data-item">
+      <text>体重: {{children[0].weight}}kg</text>
+      <text class="comparison">{{weightComparison}}</text>
+    </view>
+    <view class="data-item">
+      <text>头围: {{children[0].headCircumference}}cm</text>
+      <text class="comparison">{{headComparison}}</text>
+    </view>
+  </view>
+  
+  <view class="legend">
+    <view class="legend-item">
+      <view class="color-box" style="background-color: #1AAD19;"></view>
+      <text>宝宝数据</text>
+    </view>
+    <view class="legend-item">
+      <view class="color-box" style="background-color: #FC8251;"></view>
+      <text>WHO标准</text>
+    </view>
+  </view>
+</view>
 
