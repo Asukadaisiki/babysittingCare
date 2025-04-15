@@ -1,5 +1,19 @@
 // custom-tab-bar/index.js
+import {store}from '../store/store'
+import{storeBindingsBehavior} from 'mobx-miniprogram-bindings'
+
 Component({
+  behaviors: [storeBindingsBehavior], // 需要添加 behaviors
+
+  storeBindings: {
+    store, // 需要指定 store
+    fields: {
+      active: 'activeTabBarIndex'  // 注意引号内的拼写
+    },
+    actions: {
+      updateActive: 'updateActiveTabBarIndex'  // 这里的拼写和 store.js 中定义的方法名要一致
+    }
+  },
 
   /**
    * 组件的属性列表
@@ -12,7 +26,7 @@ Component({
    * 组件的初始数据
    */
   data: {
-    active: 0,
+    activeTabBarIndex: 0,
     "list":
          [
           { "pagePath": "/pages/home/home","iconSize":48, "iconPath" :"/images/tabs/home.png" ,"text": "首页" },
@@ -28,7 +42,7 @@ Component({
   methods: {
     onChange(event) {
         // event.detail 的值为当前选中项的索引
-        this.setData({ active: event.detail })
+        this.updateActive(event.detail)
         wx.switchTab({
           url: this.data.list[event.detail].pagePath,
         })

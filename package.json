@@ -12,6 +12,8 @@
   "dependencies": {
     "@antv/wx-f2": "^2.1.1",
     "@vant/weapp": "^1.11.7",
-    "echarts": "^5.6.0"
+    "echarts": "^5.6.0",
+    "mobx-miniprogram": "^6.12.3",
+    "mobx-miniprogram-bindings": "^5.0.0"
   }
 }

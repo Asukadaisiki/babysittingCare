@@ -1,6 +1,6 @@
 <!--custom-tab-bar/index.wxml-->
 <!--custom-tab-bar/index.wxml-->
-<van-tabbar active="{{ active }}" bind:change="onChange">
+<van-tabbar active="{{active}}"  bind:change="onChange">
   <van-tabbar-item wx:for="{{list}}" wx:key="index" icon-size="20">
     <image 
       slot="icon" 
