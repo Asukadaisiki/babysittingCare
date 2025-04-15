@@ -1,12 +1,12 @@
 {
     "pages": [
-        "pages/index/index",
-        "pages/Loading-doctor/Loading-doctor",
-        "pages/Loading-parents/Loading-parents",
         "pages/home/home",
         "pages/ai-qa/ai-qa",
         "pages/onlineClass/onlineClass",
-        "pages/settings/settings"
+        "pages/settings/settings",
+        "pages/index/index",
+        "pages/Loading-doctor/Loading-doctor",
+        "pages/Loading-parents/Loading-parents"
       ],
       "tabBar":
        {
@@ -17,9 +17,7 @@
           { "pagePath": "pages/ai-qa/ai-qa","iconPath:" :"/images/tabs/AI.png", "text": "AI-问答" },
           { "pagePath": "pages/onlineClass/onlineClass","iconPath:" :"/images/tabs/onlineClass.png",  "text": "在线课堂" },
           { "pagePath": "pages/settings/settings", "iconPath:" :"/images/tabs/setting.png", "text": "设置" }
-        ],
-      "usingComponents": {
-      }
+        ]
       },
      
     "window": {
@@ -34,32 +32,6 @@
         "van-tabbar-item": "@vant/weapp/tabbar-item/index"
       } ,
 
-      
-
-  "pages": [
-    "pages/index/index",
-    "pages/home/home",
-    "pages/ai-qa/ai-qa",
-    "pages/onlineClass/onlineClass",
-    "pages/settings/settings",
-    "pages/info-collection/info-collection"
-  ],
-  "tabBar": {
-    "custom": true,
-    "list": [
-      { "pagePath": "pages/home/home", "iconPath": "/images/tabs/home.png", "text": "首页" },
-      { "pagePath": "pages/ai-qa/ai-qa", "iconPath": "/images/tabs/AI.png", "text": "AI-问答" },
-      { "pagePath": "pages/onlineClass/onlineClass", "iconPath": "/images/tabs/onlineClass.png", "text": "在线课堂" },
-      { "pagePath": "pages/settings/settings", "iconPath": "/images/tabs/setting.png", "text": "设置" }
-    ]
-  },
-  "window": {
-    "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "早护通",
-    "navigationBarTextStyle": "black"
-  },
-  "style": "v2",
 
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
