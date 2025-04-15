@@ -1,7 +1,7 @@
 <!-- custom-tabbar.wxml -->
 <view class="custom-tabbar">
   <block wx:for="{{ list }}" wx:key="index">
-    <view class="tab-item" bindtap="switchTab" data-path="{{ item.pagePath }}">
+    <view class="tab-item" bindtap="onChange" data-index="{{ index }}">
       <!-- 图标 -->
       <image class="tab-icon" src="{{ currentPage === item.pagePath ? item.selectedIcon : item.icon }}" />
       <!-- 文字 -->
