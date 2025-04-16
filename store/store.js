@@ -1,7 +1,8 @@
+// store/store.js
 import { observable, action } from 'mobx-miniprogram'
 
 export const store = observable({
-  // 数据字段
+  // 状态数据
   activeTabBarIndex: 0,
 
   // actions

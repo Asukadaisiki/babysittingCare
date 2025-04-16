@@ -5,7 +5,8 @@
     "pages/ai-qa/ai-qa",
     "pages/onlineClass/onlineClass",
     "pages/settings/settings",
-    "pages/info-collection/info-collection"
+    "pages/info-collection/info-collection",
+    "pages/growth-monitor/growth-monitor"
   ],
   "tabBar": {
     "custom": true,

@@ -9,6 +9,13 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/growth-monitor/growth-monitor",
+          "pathName": "pages/growth-monitor/growth-monitor",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/onlineClass/onlineClass",
           "pathName": "pages/onlineClass/onlineClass",
           "query": "",

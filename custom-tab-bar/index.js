@@ -42,10 +42,19 @@ Component({
   methods: {
     onChange(event) {
         // event.detail 的值为当前选中项的索引
-        this.updateActive(event.detail)
-        wx.switchTab({
-          url: this.data.list[event.detail].pagePath,
-        })
+        const detail = event.detail;
+        // 添加动画效果
+        this.setData({
+          activeTabBarIndex: detail
+        }, () => {
+          // 延迟切换页面，让动画有时间执行
+          setTimeout(() => {
+            this.updateActive(detail)
+            wx.switchTab({
+              url: this.data.list[detail].pagePath,
+            })
+          }, 100);
+        });
       },
   },
 })

@@ -1,0 +1,138 @@
+<!-- pages/growth-monitor/growth-monitor.wxml -->
+<view class="container">
+  <!-- 儿童信息选择器 -->
+  <view class="child-selector" style="position: relative; left: 0rpx; top: 29rpx">
+    <view class="selector-title">选择宝宝</view>
+    <scroll-view scroll-x class="child-list" style="width: 147rpx; display: block; box-sizing: border-box">
+      <view 
+        wx:for="{{childInfo}}" 
+        wx:key="index" 
+        class="child-item {{currentChildIndex === index ? 'active' : ''}}"
+        bindtap="switchChild"
+        data-index="{{index}}"
+       style="width: 267rpx; display: inline-block; box-sizing: border-box">
+        <view class="child-avatar {{item.gender === '男' ? 'boy' : 'girl'}}" style="position: relative; left: 29rpx; top: 22rpx">
+          {{item.name[0]}}
+        </view>
+        <view class="child-name" style="position: relative; left: 28rpx; top: 35rpx">{{item.name}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 年龄信息 -->
+  <view class="age-info">
+    <view class="age-item">
+      <view class="age-label">实际月龄</view>
+      <view class="age-value">{{actualAge}}个月</view>
+    </view>
+    <view class="age-item">
+      <view class="age-label">矫正月龄</view>
+      <view class="age-value">{{correctedAge}}个月</view>
+      <view class="age-tip">基于预产期计算</view>
+    </view>
+  </view>
+
+  <!-- 图表标签页 -->
+  <view class="chart-tabs">
+    <view 
+      class="tab-item {{activeTab === 'height' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="height"
+    >身高曲线</view>
+    <view 
+      class="tab-item {{activeTab === 'weight' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="weight"
+    >体重曲线</view>
+    <view 
+      class="tab-item {{activeTab === 'headCircumference' ? 'active' : ''}}"
+      bindtap="switchTab"
+      data-tab="headCircumference"
+    >头围曲线</view>
+  </view>
+
+  <!-- 图表区域 -->
+  <view class="chart-container" style="width: 669rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">
+    <view class="chart-legend">
+      <view class="legend-item">
+        <view class="legend-color user-data"></view>
+        <text>{{currentChild.name}}的数据</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-color who-standard"></view>
+        <text>WHO标准</text>
+      </view>
+    </view>
+    
+    <view class="chart-wrapper">
+      <f2-canvas id="growth-chart" canvas-id="growth-chart" style="width: 100%; height: 200px;" bind:init="initChart"></f2-canvas>
+    </view>
+    
+    <view class="no-data-tip" wx:if="{{chartData[activeTab].length === 0}}">
+      暂无{{activeTab === 'height' ? '身高' : (activeTab === 'weight' ? '体重' : '头围')}}数据，请添加生长记录
+    </view>
+  </view>
+
+  <!-- 添加记录按钮 -->
+  <view class="add-record-btn" bindtap="toggleAddForm" style="width: 363rpx; display: flex; box-sizing: border-box">
+    <text class="btn-icon">+</text>
+    <text>添加生长记录</text>
+  </view>
+
+  <!-- 添加记录表单 -->
+  <view class="add-form-mask" wx:if="{{showAddForm}}" bindtap="toggleAddForm"></view>
+  <view class="add-form {{showAddForm ? 'show' : ''}}">
+    <view class="form-header">
+      <text class="form-title">添加生长记录</text>
+      <text class="close-btn" bindtap="toggleAddForm">×</text>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">日期</text>
+      <picker mode="date" value="{{newRecord.date}}" bindchange="onDateChange">
+        <view class="picker">{{newRecord.date || '请选择日期'}}</view>
+      </picker>
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">身高 (cm)</text>
+      <input type="digit" value="{{newRecord.height}}" bindinput="onHeightInput" placeholder="请输入身高" />
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">体重 (kg)</text>
+      <input type="digit" value="{{newRecord.weight}}" bindinput="onWeightInput" placeholder="请输入体重" />
+    </view>
+    
+    <view class="form-item">
+      <text class="form-label">头围 (cm)</text>
+      <input type="digit" value="{{newRecord.headCircumference}}" bindinput="onHeadCircumferenceInput" placeholder="请输入头围" />
+    </view>
+    
+    <view class="form-tip">至少填写一项数据即可</view>
+    
+    <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
+  </view>
+
+  <!-- 历史记录列表 -->
+  <view class="records-list">
+    <view class="list-header">
+      <text class="header-title">历史记录</text>
+      <text class="record-count">共{{growthRecords.length}}条</text>
+    </view>
+    
+    <view class="empty-tip" wx:if="{{growthRecords.length === 0}}">
+      暂无记录，请点击上方按钮添加
+    </view>
+    
+    <view class="record-item" wx:for="{{growthRecords}}" wx:key="index">
+      <view class="record-date">{{item.date}}</view>
+      <view class="record-data">
+        <text wx:if="{{item.height !== null}}">身高: {{item.height}}cm</text>
+        <text wx:if="{{item.weight !== null}}">体重: {{item.weight}}kg</text>
+        <text wx:if="{{item.headCircumference !== null}}">头围: {{item.headCircumference}}cm</text>
+      </view>
+      <view class="delete-btn" bindtap="deleteRecord" data-index="{{index}}">删除</view>
+    </view>
+  </view>
+</view>

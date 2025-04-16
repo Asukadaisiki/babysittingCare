@@ -7,6 +7,49 @@
   justify-content: space-between;
   padding: 200rpx 0;
   box-sizing: border-box;
+}
+
+/* 全局响应式样式 */
+page {
+  min-height: 100%;
+  background-color: #f8f8f8;
+}
+
+/* 通用flex布局 */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 通用间距 */
+.margin-sm {
+  margin: 20rpx;
+}
+
+.margin-md {
+  margin: 40rpx;
+}
+
+.margin-lg {
+  margin: 60rpx;
+}
+
+/* 通用内边距 */
+.padding-sm {
+  padding: 20rpx;
+}
+
+.padding-md {
+  padding: 40rpx;
+}
+
+.padding-lg {
+  padding: 60rpx;
 } 
 /* custom-tabbar.wxss */
 .custom-tabbar {
