@@ -9,6 +9,13 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/settings/settings",
+          "pathName": "pages/settings/settings",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/onlineClass/onlineClass",
           "pathName": "pages/onlineClass/onlineClass",
           "query": "",

@@ -5,7 +5,12 @@
     "pages/ai-qa/ai-qa",
     "pages/onlineClass/onlineClass",
     "pages/settings/settings",
-    "pages/info-collection/info-collection"
+    "pages/info-collection/info-collection",
+    "pages/baby-info/baby-info",
+    "pages/notifications/notifications",
+    "pages/help-feedback/help-feedback",
+    "pages/account-privacy/account-privacy",
+    "pages/about/about"
   ],
   "tabBar": {
     "custom": true,
