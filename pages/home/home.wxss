@@ -1,56 +1,276 @@
-/* pages/home/home.wxss */
 .container {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+  padding: 30rpx;
+  background-color: #FFFCF9;
+  min-height: 100vh;
 }
 
-.header {
-  margin-bottom: 20px;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: bold;
-}
-
-.chart-container {
-  margin: 20px 0;
-}
-
-.growth-chart {
-  width: 100%;
-  height: 300px;
-}
-
-.data-section {
-  margin-top: 20px;
-}
-
-.data-item {
+/* 顶部欢迎区域 */
+.welcome-section {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  align-items: center;
+  margin-bottom: 40rpx;
+  padding: 20rpx 0;
 }
 
-.comparison {
+.welcome-text {
+  display: flex;
+  align-items: baseline;
+}
+
+.greeting {
+  font-size: 32rpx;
   color: #666;
 }
 
-.legend {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
+.user-name {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-left: 10rpx;
 }
 
-.legend-item {
+.date-info {
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 宝宝信息卡片 */
+.child-card {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 40rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.child-info {
   display: flex;
   align-items: center;
-  margin: 0 15px;
 }
 
-.color-box {
-  width: 15px;
-  height: 15px;
-  margin-right: 5px;
+.child-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: white;
+  margin-right: 20rpx;
+}
+
+.child-avatar.boy {
+  background-color: #74B9FF;
+}
+
+.child-avatar.girl {
+  background-color: #FF9FF3;
+}
+
+.child-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.child-name {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.child-age {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.child-status {
+  font-size: 28rpx;
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
+  padding: 10rpx 20rpx;
+  border-radius: 30rpx;
+}
+
+/* 功能区域 */
+.feature-section {
+  margin-bottom: 40rpx;
+}
+
+.section-title {
+  font-size: 34rpx;
+    font-weight: bold;
+    margin: 20rpx 20rpx 20rpx;
+    color: #333;
+    position: relative;
+    padding-left: 20rpx;
+}
+
+.section-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6rpx;
+  height: 30rpx;
+  width: 8rpx;
+  background-color: #FF9FF3;
+  border-radius: 4rpx;
+}
+
+
+.feature-item {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: block;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s;
+}
+
+.feature-item:active {
+  transform: scale(0.98);
+}
+
+.feature-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.growth-icon {
+  background-color: #FFD3E0;
+  position: relative;
+}
+
+.growth-icon::before {
+  content: '📏';
+  font-size: 40rpx;
+}
+
+.feeding-icon {
+  background-color: #D4F5FF;
+  position: relative;
+}
+
+.feeding-icon::before {
+  content: '🍼';
+  font-size: 40rpx;
+}
+
+.sleep-icon {
+  background-color: #E0E0FF;
+  position: relative;
+}
+
+.sleep-icon::before {
+  content: '💤';
+  font-size: 40rpx;
+}
+
+.vaccine-icon {
+  background-color: #FFECDB;
+  position: relative;
+}
+
+.vaccine-icon::before {
+  content: '💉';
+  font-size: 40rpx;
+}
+
+.feature-name {
+  font-size: 28rpx;
+  color: #333;
+  margin-top: 10rpx;
+}
+
+/* 育儿知识区域 */
+.knowledge-section, .feature-section {
+  margin-bottom: 40rpx;
+  display: block;
+  text-align: left;
+}
+
+.knowledge-card {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  position: relative;
+}
+
+.knowledge-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.knowledge-desc {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.knowledge-tag {
+  display: inline-block;
+  font-size: 22rpx;
+  color: #FF9FF3;
+  background-color: rgba(255, 159, 243, 0.1);
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+/* 无宝宝信息提示 */
+.no-child-tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+}
+
+.tip-icon {
+  width: 120rpx;
+  height: 120rpx;
+  background-color: #F5F5F5;
+  border-radius: 50%;
+  margin-bottom: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tip-icon::before {
+  content: '👶';
+  font-size: 60rpx;
+}
+
+.tip-text {
+  font-size: 30rpx;
+  color: #999;
+  margin-bottom: 40rpx;
+}
+
+.add-child-btn {
+  background-color: #FF9FF3;
+  color: #FFF;
+  font-size: 30rpx;
+  padding: 20rpx 60rpx;
+  border-radius: 40rpx;
+  border: none;
+}
+
+.add-child-btn:active {
+  opacity: 0.8;
 }

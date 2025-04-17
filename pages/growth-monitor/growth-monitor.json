@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "f2-canvas": "@antv/wx-f2"
+  },
+  "navigationBarTitleText": "宝宝生长监测"
+}

@@ -1,37 +1,60 @@
-<!--pages/home/home.wxml-->
+<!-- pages/home/home.wxml -->
 <view class="container">
-  <view class="header">
-    <text class="title">宝宝生长曲线</text>
+  <!-- 顶部欢迎区域 -->
+  <view class="welcome-section">
+    <view class="welcome-text">
+      <text class="greeting">您好，</text>
+      <text class="user-name">{{userName}}</text>
+    </view>
+    <view class="date-info">{{currentDate}}</view>
   </view>
-  
-  <view class="chart-container">
-    <canvas canvas-id="growth-chart" class="growth-chart"></canvas>
-  </view>
-  
-  <view class="data-section">
-    <view class="data-item">
-      <text>身高: {{children[0].height}}cm</text>
-      <text class="comparison">{{heightComparison}}</text>
+
+  <!-- 宝宝信息卡片 -->
+  <view class="child-card" wx:if="{{hasChild}}" style="width: 515rpx; display: flex; box-sizing: border-box">
+    <view class="child-info">
+      <view class="child-avatar {{childInfo.gender === '男' ? 'boy' : 'girl'}}">
+        {{childInfo.name[0]}}
+      </view>
+      <view class="child-details">
+        <view class="child-name">{{childInfo.name}}</view>
+        <view class="child-age">{{childAge}}个月</view>
+      </view>
     </view>
-    <view class="data-item">
-      <text>体重: {{children[0].weight}}kg</text>
-      <text class="comparison">{{weightComparison}}</text>
-    </view>
-    <view class="data-item">
-      <text>头围: {{children[0].headCircumference}}cm</text>
-      <text class="comparison">{{headComparison}}</text>
+    <view class="child-status" style="position: relative; left: 8rpx; top: 0rpx">
+      <text>宝宝状态良好</text>
     </view>
   </view>
-  
-  <view class="legend">
-    <view class="legend-item">
-      <view class="color-box" style="background-color: #1AAD19;"></view>
-      <text>宝宝数据</text>
+
+  <!-- 功能区域 -->
+  <view class="feature-section">
+    <view class="section-title" style="position: relative; left: -20rpx; top: 20rpx">育儿助手</view>
+    <view class="feature-item" bindtap="navigateToGrowthMonitor" style="width: 515rpx; display: block; box-sizing: border-box; position: relative; left: 0rpx; top: 8rpx">
+      <view class="feature-icon growth-icon"></view>
+      <view class="feature-name">生长监测</view>
     </view>
-    <view class="legend-item">
-      <view class="color-box" style="background-color: #FC8251;"></view>
-      <text>WHO标准</text>
+  </view>
+
+  <!-- 育儿知识区域 -->
+  <view class="knowledge-section">
+    <view class="section-title">育儿知识</view>
+    
+    <view class="knowledge-card" style="position: relative; left: 0rpx; top: -13rpx">
+      <view class="knowledge-title">宝宝成长里程碑</view>
+      <view class="knowledge-desc">了解宝宝在不同月龄应该达到的发育指标</view>
+      <view class="knowledge-tag">发育指南</view>
     </view>
+    
+    <view class="knowledge-card">
+      <view class="knowledge-title">科学添加辅食指南</view>
+      <view class="knowledge-desc">4-6个月宝宝如何正确添加辅食</view>
+      <view class="knowledge-tag">喂养指南</view>
+    </view>
+  </view>
+
+  <!-- 无宝宝信息提示 -->
+  <view class="no-child-tip" wx:if="{{!hasChild}}">
+    <view class="tip-icon"></view>
+    <view class="tip-text">您还没有添加宝宝信息</view>
+    <button class="add-child-btn" bindtap="navigateToInfoCollection">添加宝宝</button>
   </view>
 </view>
-

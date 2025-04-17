@@ -9,8 +9,13 @@
     "miniprogram": {
       "list": [
         {
+<<<<<<< HEAD
           "name": "pages/settings/settings",
           "pathName": "pages/settings/settings",
+=======
+          "name": "pages/growth-monitor/growth-monitor",
+          "pathName": "pages/growth-monitor/growth-monitor",
+>>>>>>> f0deb8f134881148fead37805353e8223df83912
           "query": "",
           "launchMode": "default",
           "scene": null
