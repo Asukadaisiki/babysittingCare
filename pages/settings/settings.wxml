@@ -1,3 +1,36 @@
-<!--pages/settings/settings.wxml-->
-<!-- 页面的 .wxml 文件 -->
-<text>pages/settings/settings.wxml</text>
+
+  <!-- 顶部登录区域 -->
+  <view class="login-section">
+    <view class="avatar-container">
+      <image class="avatar" src="/images/default-avatar.png"></image>
+    </view>
+    <text class="login-text">登录</text>
+  </view>
+  
+  <!-- 设置选项列表 -->
+  <view class="settings-list">
+    <navigator url="/pages/baby-info/baby-info" class="settings-item">
+      <text>宝宝信息</text>
+      <view class="arrow">></view>
+    </navigator>
+    
+    <navigator url="/pages/notifications/notifications" class="settings-item">
+      <text>提醒和通知</text>
+      <view class="arrow">></view>
+    </navigator>
+    
+    <navigator url="/pages/help-feedback/help-feedback" class="settings-item">
+      <text>帮助与反馈</text>
+      <view class="arrow">></view>
+    </navigator>
+    
+    <navigator url="/pages/account-privacy/account-privacy" class="settings-item">
+      <text>账号与隐私</text>
+      <view class="arrow">></view>
+    </navigator>
+    
+    <navigator url="/pages/about/about" class="settings-item">
+      <text>关于</text>
+      <view class="arrow">></view>
+    </navigator>
+  </view>
