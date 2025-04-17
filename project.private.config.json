@@ -4,6 +4,13 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/ai-qa/ai-qa",
+          "pathName": "pages/ai-qa/ai-qa",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/settings/settings",
           "pathName": "pages/settings/settings",
           "query": "",
