@@ -12,12 +12,26 @@ Page({
   },
 
   onLoad(options) {
-    // 检查是否已有儿童信息
+    // 检查是否已有儿童信息，并且不是添加模式
     const childInfo = wx.getStorageSync('childInfo')
-    if (childInfo) {
+    if (childInfo && !options.mode) {
       wx.redirectTo({
         url: '/pages/home/home'
       })
+    }
+    
+    // 如果是添加模式，不需要重定向，直接显示添加表单
+    if (options.mode === 'add') {
+      // 清空默认的子表单，用户将添加新的宝宝
+      this.setData({
+        children: [{
+          childName: '',
+          expectedDate: '',
+          birthDate: '',
+          gender: '男',
+          genderIndex: 0
+        }]
+      });
     }
   },
 
@@ -115,8 +129,15 @@ Page({
       gender: child.gender
     }))
 
-    wx.setStorageSync('childInfo', childrenInfo)
-    console.log('儿童信息已保存:', childrenInfo)
+    // 获取现有的儿童信息
+    const existingChildInfo = wx.getStorageSync('childInfo') || []
+    
+    // 合并现有的和新的儿童信息
+    const updatedChildInfo = [...existingChildInfo, ...childrenInfo]
+    
+    // 保存更新后的儿童信息
+    wx.setStorageSync('childInfo', updatedChildInfo)
+    console.log('儿童信息已保存:', updatedChildInfo)
     
     // 跳转到首页
     console.log('准备跳转到首页')

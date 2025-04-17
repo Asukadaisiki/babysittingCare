@@ -61,7 +61,9 @@
   justify-content: center;
   font-size: 36rpx;
   color: white;
-  margin-right: 20rpx;
+  margin: 0 auto 10rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
 .child-avatar.boy {
@@ -78,10 +80,15 @@
 }
 
 .child-name {
-  font-size: 34rpx;
+  font-size: 30rpx;
   font-weight: bold;
   color: #333;
   margin-bottom: 6rpx;
+  text-align: center;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .child-age {
@@ -98,6 +105,440 @@
 }
 
 /* 功能区域 */
+
+/* 生长监测样式 */
+.growth-monitor-container {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+/* 儿童选择器样式 */
+.child-selector {
+  margin-bottom: 30rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.selector-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15rpx;
+  padding: 0 20rpx;
+}
+
+.selector-title {
+  font-size: 28rpx;
+  color: #888;
+}
+
+.child-management {
+  display: flex;
+  align-items: center;
+}
+
+.add-child-icon, .delete-child-icon {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 15rpx;
+  font-size: 28rpx;
+  color: white;
+}
+
+.add-child-icon {
+  background-color: #4CAF50;
+}
+
+.delete-child-icon {
+  background-color: #FF6B6B;
+}
+
+.child-list {
+  white-space: nowrap;
+  padding: 10rpx 0;
+  width: 100%;
+  display: flex;
+  overflow-x: auto;
+}
+
+.child-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 30rpx;
+  width: 120rpx;
+  padding: 10rpx;
+  position: relative;
+}
+
+.child-item.active {
+  background-color: rgba(255, 107, 107, 0.1);
+  border-radius: 12rpx;
+}
+
+.child-item.active .child-avatar {
+  transform: scale(1.1);
+  box-shadow: 0 4rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 年龄信息样式 */
+.age-info {
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+  padding: 20rpx;
+  background-color: #FFF;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 30rpx;
+  width: 100%;
+  position: relative;
+}
+
+.age-item {
+  text-align: center;
+  flex: 1;
+  padding: 0 20rpx;
+  max-width: 45%;
+}
+
+.age-divider {
+  width: 2rpx;
+  height: 80%;
+  background-color: #EEEEEE;
+  align-self: center;
+}
+
+.age-label {
+  font-size: 26rpx;
+  color: #888;
+  margin-bottom: 10rpx;
+}
+
+.age-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.age-tip {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+
+/* 图表标签页样式 */
+.chart-tabs {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.tab-item {
+  padding: 20rpx 0;
+  font-size: 28rpx;
+  color: #666;
+  position: relative;
+  flex: 1;
+  text-align: center;
+}
+
+.tab-item.active {
+  color: #FF6B6B;
+  font-weight: bold;
+}
+
+.tab-item.active:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40rpx;
+  height: 4rpx;
+  background-color: #FF6B6B;
+  border-radius: 2rpx;
+}
+
+/* 图表区域样式 */
+.chart-container {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  margin-bottom: 30rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin: 0 20rpx;
+}
+
+.legend-color {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-right: 10rpx;
+}
+
+.legend-color.user-data {
+  background-color: #FF6B6B;
+}
+
+.legend-color.who-standard {
+  background-color: #AAAAAA;
+}
+
+.chart-wrapper {
+  width: 100%;
+  height: 400rpx;
+}
+
+.no-data-tip {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 添加记录按钮样式 */
+.add-record-btn {
+  background-color: #FF6B6B;
+  color: white;
+  border-radius: 40rpx;
+  padding: 20rpx 30rpx;
+  font-size: 30rpx;
+  margin: 30rpx auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.3);
+}
+
+.btn-icon {
+  font-size: 36rpx;
+  margin-right: 10rpx;
+}
+
+/* 添加记录表单样式 */
+.add-form-mask, .modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+/* 删除宝宝对话框样式 */
+.delete-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 40rpx 30rpx;
+  z-index: 101;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.15);
+}
+
+.modal-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  margin-bottom: 30rpx;
+}
+
+.modal-content {
+  font-size: 30rpx;
+  color: #666;
+  text-align: center;
+  margin-bottom: 40rpx;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cancel-btn, .confirm-btn {
+  flex: 1;
+  margin: 0 15rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+}
+
+.cancel-btn {
+  background-color: #F0F0F0;
+  color: #666;
+}
+
+.confirm-btn {
+  background-color: #FF6B6B;
+  color: white;
+}
+
+.add-form {
+  position: fixed;
+  bottom: -100%;
+  left: 0;
+  right: 0;
+  background-color: #FFF;
+  border-radius: 30rpx 30rpx 0 0;
+  padding: 40rpx 30rpx;
+  z-index: 101;
+  transition: bottom 0.3s;
+}
+
+.add-form.show {
+  bottom: 0;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.form-title {
+  font-size: 34rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.close-btn {
+  font-size: 40rpx;
+  color: #999;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 10rpx;
+  display: block;
+}
+
+.picker, input {
+  background-color: #F5F5F5;
+  padding: 20rpx;
+  border-radius: 10rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.form-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 30rpx;
+  text-align: center;
+}
+
+.submit-btn {
+  background-color: #FF6B6B;
+  color: white;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+  margin-top: 20rpx;
+}
+
+/* 历史记录列表样式 */
+.records-list {
+  background-color: #FFF;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-top: 30rpx;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #eee;
+}
+
+.header-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.record-count {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #eee;
+}
+
+.record-date {
+  font-size: 28rpx;
+  color: #666;
+  width: 180rpx;
+}
+
+.record-data {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.record-data text {
+  font-size: 26rpx;
+  color: #333;
+  margin-bottom: 6rpx;
+}
+
+.delete-btn {
+  font-size: 26rpx;
+  color: #FF6B6B;
+  padding: 10rpx 20rpx;
+  border: 1rpx solid #FF6B6B;
+  border-radius: 30rpx;
+}
 .feature-section {
   margin-bottom: 40rpx;
 }
@@ -109,6 +550,7 @@
     color: #333;
     position: relative;
     padding-left: 20rpx;
+    padding-left: 10rpx;
 }
 
 .section-title::before {
