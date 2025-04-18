@@ -10,20 +10,7 @@
   </view>
 
   <!-- 宝宝信息卡片 -->
-  <view class="child-card" wx:if="{{hasChild}}" style="width: 515rpx; display: flex; box-sizing: border-box">
-    <view class="child-info">
-      <view class="child-avatar {{childInfo.gender === '男' ? 'boy' : 'girl'}}">
-        {{childInfo.name[0]}}
-      </view>
-      <view class="child-details">
-        <view class="child-name">{{childInfo.name}}</view>
-        <view class="child-age">{{childAge}}个月</view>
-      </view>
-    </view>
-    <view class="child-status" style="position: relative; left: 8rpx; top: 0rpx">
-      <text>宝宝状态良好</text>
-    </view>
-  </view>
+  
 
   <!-- 功能区域 - 生长监测 -->
   <view class="feature-section">
@@ -38,7 +25,7 @@
             <view wx:if="{{childInfo.length > 0}}" class="delete-child-icon" bindtap="showDeleteChildModal">-</view>
           </view>
         </view>
-        <scroll-view scroll-x class="child-list">
+        <scroll-view scroll-x class="child-list" enable-flex="true" style="height: 200rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
           <view 
             wx:for="{{childInfo}}" 
             wx:key="index" 
@@ -54,7 +41,7 @@
       </view>
 
       <!-- 年龄信息 -->
-      <view class="age-info">
+      <view class="age-info" style="width: 615rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
         <view class="age-item">
           <view class="age-label">实际月龄</view>
           <view class="age-value">{{actualAge}}个月</view>
@@ -111,7 +98,7 @@
         </view>
         
         <view class="chart-wrapper">
-          <f2-canvas id="growth-chart" canvas-id="growth-chart" style="width: 100%; height: 200px;" bind:init="initChart"></f2-canvas>
+          <f2 class="chart" onInit="{{onInitChart}}"/>
         </view>
         
         <view class="no-data-tip" wx:if="{{chartData[activeTab].length === 0}}">
@@ -184,8 +171,14 @@
     </view>
   </view>
 
+  <!-- 无宝宝信息提示 -->
+  <view class="no-child-tip" wx:if="{{!hasChild}}">
+    <view class="tip-icon"></view>
+    <view class="tip-text">您还没有添加宝宝信息</view>
+    <button class="add-child-btn" bindtap="navigateToInfoCollection">添加宝宝</button>
+  </view>
   <!-- 育儿知识区域 -->
-  <view class="knowledge-section">
+  <view class="knowledge-section" style="width: 654rpx; display: block; box-sizing: border-box">
     <view class="section-title">育儿知识</view>
     
     <view class="knowledge-card" style="position: relative; left: 0rpx; top: -13rpx">
@@ -201,10 +194,5 @@
     </view>
   </view>
 
-  <!-- 无宝宝信息提示 -->
-  <view class="no-child-tip" wx:if="{{!hasChild}}">
-    <view class="tip-icon"></view>
-    <view class="tip-text">您还没有添加宝宝信息</view>
-    <button class="add-child-btn" bindtap="navigateToInfoCollection">添加宝宝</button>
-  </view>
+  
 </view>

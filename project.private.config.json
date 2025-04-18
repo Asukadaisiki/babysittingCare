@@ -26,5 +26,9 @@
         }
       ]
     }
+  },
+  "libVersion": "3.8.1",
+  "setting": {
+    "compileHotReLoad": true
   }
 }

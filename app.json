@@ -10,8 +10,7 @@
     "pages/notifications/notifications",
     "pages/help-feedback/help-feedback",
     "pages/account-privacy/account-privacy",
-    "pages/about/about",
-    "pages/growth-monitor/growth-monitor"
+    "pages/about/about"
   ],
   "tabBar": {
     "custom": true,
@@ -47,5 +46,9 @@
   "style": "v2",
   "componentFramework": "glass-easel",
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "usingComponents": {
+  "f2-chart": "@antv/wx-f2"
+  }
+
 }
