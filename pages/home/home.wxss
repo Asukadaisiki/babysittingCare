@@ -3,7 +3,10 @@
   background-color: #FFFCF9;
   min-height: 100vh;
 }
-
+.f2-chart {
+    width: 100%;
+    height: 500rpx;
+  }
 /* 顶部欢迎区域 */
 .welcome-section {
   display: flex;

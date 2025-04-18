@@ -1,1 +1,5 @@
 /* pages/baby-info/baby-info.wxss */
+.f2-chart {
+    width: 100%;
+    height: 500rpx;
+  }
