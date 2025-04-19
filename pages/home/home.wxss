@@ -277,22 +277,16 @@
 
 /* 图表区域样式 */
 .chart-container {
-  background-color: #FFF;
-  border-radius: 16rpx;
-  padding: 20rpx;
-  margin-bottom: 30rpx;
-  width: 100%;
-  box-sizing: border-box;
+  margin-top: 20rpx;
+  padding: 10rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
 }
 
 .chart-legend {
   display: flex;
   justify-content: center;
   margin-bottom: 20rpx;
-}
-.chart {
-    width: 100%; 
-    height: 200px;
 }
 
 .legend-item {
@@ -302,30 +296,63 @@
 }
 
 .legend-color {
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  margin-right: 10rpx;
+  width: 30rpx;
+  height: 10rpx;
+  margin-right: 8rpx;
+  border-radius: 4rpx;
 }
 
-.legend-color.user-data {
-  background-color: #FF6B6B;
+.user-data {
+  background-color: #1890FF;
 }
 
-.legend-color.who-standard {
-  background-color: #AAAAAA;
+.who-standard {
+  background-color: #FF6B3B;
 }
 
 .chart-wrapper {
   width: 100%;
-  height: 400rpx;
+  height: 500rpx;
+  margin-bottom: 20rpx;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
 }
 
 .no-data-tip {
   text-align: center;
-  padding: 40rpx 0;
+  padding: 30rpx;
   color: #999;
   font-size: 28rpx;
+}
+
+/* 图表解读区域样式 */
+.chart-analysis {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  background-color: #F8F8F8;
+  border-radius: 10rpx;
+  border-left: 4rpx solid #1890FF;
+}
+
+.analysis-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 15rpx;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-content text {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 40rpx;
 }
 
 /* 添加记录按钮样式 */
@@ -727,4 +754,30 @@
 
 .add-child-btn:active {
   opacity: 0.8;
+}
+
+/* 添加刷新按钮样式 */
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 20rpx;
+  background-color: #f8f8f8;
+  color: #1989fa;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  margin-left: auto;
+  margin-right: 10rpx;
+  cursor: pointer;
+  box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+.refresh-icon {
+  font-size: 28rpx;
+  margin-right: 6rpx;
+  font-weight: bold;
+}
+
+.refresh-btn:active {
+  background-color: #e6e6e6;
 }
