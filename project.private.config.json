@@ -4,6 +4,41 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/height-chart/height-chart",
+          "pathName": "pages/height-chart/height-chart",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/head-chart/head-chart",
+          "pathName": "pages/head-chart/head-chart",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/weight-chart/weight-chart",
+          "pathName": "pages/weight-chart/weight-chart",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/head-chart/head-chart",
+          "pathName": "pages/head-chart/head-chart",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/home/home",
+          "pathName": "pages/home/home",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/baby-info/baby-info",
           "pathName": "pages/baby-info/baby-info",
           "query": "",

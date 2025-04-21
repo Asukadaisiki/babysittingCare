@@ -10,7 +10,10 @@
     "pages/notifications/notifications",
     "pages/help-feedback/help-feedback",
     "pages/account-privacy/account-privacy",
-    "pages/about/about"
+    "pages/about/about",
+    "pages/head-chart/head-chart",
+    "pages/height-chart/height-chart",
+    "pages/weight-chart/weight-chart"
   ],
   "tabBar": {
     "custom": true,
@@ -50,5 +53,4 @@
   "usingComponents": {
   "f2-chart": "@antv/wx-f2"
   }
-
 }

@@ -68,8 +68,6 @@
       <!-- 图表标签页 -->
       <view class="chart-tabs">
 
-
-
         <view 
           class="tab-item {{activeTab === 'height' ? 'active' : ''}}"
           bindtap="switchTab"

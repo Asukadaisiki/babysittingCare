@@ -1,0 +1,15 @@
+<!-- pages/height-chart/height-chart.wxml -->
+<view class="container">
+  <view class="chart-title">身高生长曲线</view>
+  
+  <view class="chart-container">
+    <canvas canvas-id="height-chart" style="width: 100%; height: 300px; background-color: #fff;"></canvas>
+  </view>
+  
+  <view class="chart-info">
+    <text>WHO标准身高生长曲线</text>
+    <text wx:if="{{childInfo.name}}">宝宝: {{childInfo.name}}</text>
+  </view>
+  
+  <view class="back-button" bindtap="navigateBack">返回</view>
+</view>
