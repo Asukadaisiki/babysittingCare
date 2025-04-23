@@ -39,5 +39,6 @@
   <view class="button-group">
     <button class="add-btn" bindtap="addChild">添加宝宝</button>
     <button class="submit-btn" bindtap="onSubmit">确认提交</button>
+    <button class="skip-btn" bindtap="skipToHome">跳过</button>
   </view>
 </view>

@@ -12,6 +12,35 @@ App({
         // 发送 res.code 到后台换取 openId, sessionKey, unionId
       }
     })
+    
+    // 检查是否有小孩信息，决定启动页面
+    this.checkChildInfoAndNavigate()
+  },
+  
+  // 检查是否有小孩信息并导航到相应页面
+  checkChildInfoAndNavigate() {
+    const childInfo = wx.getStorageSync('childInfo') || []
+    
+    // 获取当前页面路径
+    const pages = getCurrentPages()
+    const currentPage = pages.length > 0 ? pages[pages.length - 1].route : ''
+    
+    // 如果已有小孩信息，直接导航到home页面
+    if (childInfo.length > 0) {
+      // 避免重复导航到home页面
+      if (currentPage !== 'pages/home/home') {
+        wx.switchTab({
+          url: '/pages/home/home'
+        })
+      }
+    } else {
+      // 如果没有小孩信息，导航到index页面
+      if (currentPage !== 'pages/index/index') {
+        wx.reLaunch({
+          url: '/pages/index/index'
+        })
+      }
+    }
   },
   globalData: {
     userInfo: null,

@@ -16,21 +16,20 @@ Page({
 chooseRole(e) {
     const role = e.currentTarget.dataset.role;
     
-    // 检查是否首次登录
-    const isFirstLogin = !wx.getStorageSync('userInfo');
+    // 检查是否有小孩信息
+    const childInfo = wx.getStorageSync('childInfo') || [];
     
-    if (isFirstLogin && role === 'parents') {
-      // 首次登录，跳转到信息收集页面
+    if (childInfo.length === 0 && role === 'parents') {
+      // 没有小孩信息，跳转到信息收集页面
       wx.navigateTo({
         url: `/pages/info-collection/info-collection?role=${role}`
       });
     } else {
-      // 非首次登录，直接跳转到首页
+      // 已有小孩信息，直接跳转到首页
       wx.switchTab({
         url: '/pages/home/home'
       });
     }
-
   },
 
 

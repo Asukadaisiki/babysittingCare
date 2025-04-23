@@ -65,50 +65,40 @@
         </view>
       </view>
 
-      <!-- 图表标签页 -->
-      <view class="chart-tabs">
-
+      <!-- 图表导航按钮 -->
+      <view class="chart-nav-buttons">
         <view 
-          class="tab-item {{activeTab === 'height' ? 'active' : ''}}"
+          class="nav-button"
           bindtap="switchTab"
           data-tab="height"
-
-        >身高曲线</view>
+        >
+          <view class="nav-icon height-icon"></view>
+          <view class="nav-text">身高曲线</view>
+        </view>
 
         <view 
-          class="tab-item {{activeTab === 'weight' ? 'active' : ''}}"
+          class="nav-button"
           bindtap="switchTab"
           data-tab="weight"
-        >体重曲线</view>
+        >
+          <view class="nav-icon weight-icon"></view>
+          <view class="nav-text">体重曲线</view>
+        </view>
+        
         <view 
-          class="tab-item {{activeTab === 'headCircumference' ? 'active' : ''}}"
+          class="nav-button"
           bindtap="switchTab"
           data-tab="headCircumference"
-        >头围曲线</view>
-        <view class="refresh-btn" bindtap="refreshAllCharts">
-          <text class="refresh-icon">↻</text>
-          <text>刷新</text>
+        >
+          <view class="nav-icon head-icon"></view>
+          <view class="nav-text">头围曲线</view>
         </view>
       </view>
 
-      <!-- 图表区域 -->
-      <view class="chart-container" style="width: 100%; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">
-        
-        <view class="chart-wrapper">
-          <f2 id="growth-chart" class="chart" onInit="{{onInitChart}}" opts="{{opts}}"/>
-        </view>
-        
-        <view class="no-data-tip" wx:if="{{chartData[activeTab].length === 0 && whoStandard[activeTab].length === 0}}">
-          暂无数据，请添加生长记录
-        </view>
-        
-        <view class="chart-analysis" wx:if="{{whoStandard[activeTab].length > 0}}">
-          <view class="analysis-title">生长曲线解读</view>
-          <view class="analysis-content">
-            <text wx:if="{{chartData[activeTab].length > 0}}">• 蓝色线: {{currentChild.name}}的实际生长数据</text>
-            <text>• 橙色线: WHO生长标准中位数</text>
-          </view>
-        </view>
+      <!-- 生长记录提示 -->
+      <view class="growth-record-tip">
+        <view class="tip-icon"></view>
+        <view class="tip-text">点击上方按钮查看详细生长曲线</view>
       </view>
 
       <!-- 添加记录按钮 -->
@@ -200,8 +190,4 @@
   </view>
 
   
-</view>
-
-<view class="chart-container">
-  <ff-canvas id="growthChart" canvas-id="growthChartCanvas" opts="{{ opts }}" bindinit="initChart" wx:key="{{chartKey}}"></ff-canvas>
 </view>
