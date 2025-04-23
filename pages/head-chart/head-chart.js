@@ -142,14 +142,23 @@ Page({
       }
     });
 
-    // 提示成功
+    // 提示成功并返回首页
     wx.showToast({
       title: '记录已添加',
-      icon: 'success'
+      icon: 'success',
+      duration: 1500,
+      success: () => {
+        // 如果是从首页跳转来的（hideRecords为true），则添加成功后返回首页
+        if (this.data.hideRecords) {
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        } else {
+          // 重新绘制图表
+          this.drawSimpleChart();
+        }
+      }
     });
-
-    // 重新绘制图表
-    this.drawSimpleChart();
   },
 
   // 删除记录

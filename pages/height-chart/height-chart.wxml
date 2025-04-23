@@ -42,25 +42,5 @@
     <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
   </view>
 
-  <!-- 历史记录列表 -->
-  <view class="records-list">
-    <view class="list-header">
-      <text class="header-title">历史记录</text>
-      <text class="record-count">共{{growthRecords.length}}条</text>
-    </view>
-    
-    <view class="empty-tip" wx:if="{{growthRecords.length === 0}}">
-      暂无记录，请点击上方按钮添加
-    </view>
-    
-    <view class="record-item" wx:for="{{growthRecords}}" wx:key="index">
-      <view class="record-date">{{item.date}}</view>
-      <view class="record-data">
-        <text wx:if="{{item.height !== null}}">身高: {{item.height}}cm</text>
-      </view>
-      <view class="delete-btn" bindtap="deleteRecord" data-index="{{index}}">删除</view>
-    </view>
-  </view>
-  
-  <view class="back-button" bindtap="navigateBack">返回</view>
+ 、
 </view>

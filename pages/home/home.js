@@ -171,7 +171,7 @@ Page({
 		// 获取当前选中的宝宝信息
 		const childInfo = this.data.currentChild;
 		const childId = childInfo.name ? encodeURIComponent(childInfo.name) : 'default';
-		
+
 		// 根据标签类型跳转到对应页面
 		switch (tab) {
 			case 'weight':
@@ -295,6 +295,104 @@ Page({
 			icon: 'success'
 		});
 	},
+	// 切换添加表单显示状态
+	toggleAddForm: function () {
+		this.setData({
+			showAddForm: !this.data.showAddForm
+		});
+	},
+
+	// 日期选择器变化事件
+	onDateChange: function (e) {
+		this.setData({
+			'newRecord.date': e.detail.value
+		});
+	},
+
+	// 身高输入事件
+	onHeightInput: function (e) {
+		this.setData({
+			'newRecord.height': e.detail.value
+		});
+	},
+
+	// 体重输入事件
+	onWeightInput: function (e) {
+		this.setData({
+			'newRecord.weight': e.detail.value
+		});
+	},
+
+	// 头围输入事件
+	onHeadCircumferenceInput: function (e) {
+		this.setData({
+			'newRecord.headCircumference': e.detail.value
+		});
+	},
+
+	// 添加生长记录
+	addGrowthRecord: function () {
+		// 验证输入
+		if (!this.data.newRecord.date) {
+			wx.showToast({
+				title: '请选择日期',
+				icon: 'none'
+			});
+			return;
+		}
+
+		// 至少需要输入一项数据
+		if (!this.data.newRecord.height && !this.data.newRecord.weight && !this.data.newRecord.headCircumference) {
+			wx.showToast({
+				title: '请至少输入一项数据',
+				icon: 'none'
+			});
+			return;
+		}
+
+		// 创建新记录
+		const newRecord = {
+			date: this.data.newRecord.date,
+			height: this.data.newRecord.height ? parseFloat(this.data.newRecord.height) : null,
+			weight: this.data.newRecord.weight ? parseFloat(this.data.newRecord.weight) : null,
+			headCircumference: this.data.newRecord.headCircumference ? parseFloat(this.data.newRecord.headCircumference) : null
+		};
+
+		// 添加到记录列表
+		const updatedRecords = [...this.data.growthRecords, newRecord];
+
+		// 按日期排序
+		updatedRecords.sort((a, b) => {
+			return new Date(a.date) - new Date(b.date);
+		});
+
+		// 保存到本地存储
+		if (this.data.currentChild && this.data.currentChild.name) {
+			const storageKey = `growthRecords_${this.data.currentChild.name}`;
+			wx.setStorageSync(storageKey, updatedRecords);
+		}
+
+		// 更新页面数据
+		this.setData({
+			growthRecords: updatedRecords,
+			showAddForm: false,
+			newRecord: {
+				date: '',
+				height: '',
+				weight: '',
+				headCircumference: ''
+			}
+		}, () => {
+			// 重新合并记录
+			this.mergeGrowthRecords();
+
+			// 提示成功
+			wx.showToast({
+				title: '记录已添加',
+				icon: 'success'
+			});
+		});
+	},
 
 	// 导航到信息收集页面
 	navigateToInfoCollection: function () {
@@ -302,4 +400,103 @@ Page({
 			url: '/pages/info-collection/info-collection?mode=add'
 		});
 	},
+
+	// 在获取生长记录数据后调用此方法合并同一天的记录
+	mergeGrowthRecords: function () {
+		const records = this.data.growthRecords;
+		const mergedMap = {};
+
+		// 按日期分组
+		records.forEach(record => {
+			if (!mergedMap[record.date]) {
+				mergedMap[record.date] = {};
+			}
+
+			// 合并同一天的数据
+			if (record.height !== null && record.height !== undefined) {
+				mergedMap[record.date].height = record.height;
+			}
+			if (record.weight !== null && record.weight !== undefined) {
+				mergedMap[record.date].weight = record.weight;
+			}
+			if (record.headCircumference !== null && record.headCircumference !== undefined) {
+				mergedMap[record.date].headCircumference = record.headCircumference;
+			}
+
+			// 保存日期
+			mergedMap[record.date].date = record.date;
+		});
+
+		// 转换为数组并按日期排序
+		const mergedRecords = Object.values(mergedMap).sort((a, b) => {
+			return new Date(b.date) - new Date(a.date); // 降序排列，最新的在前面
+		});
+
+		this.setData({
+			mergedRecords: mergedRecords
+		});
+	},
+
+	// 在加载生长记录后调用合并方法
+	loadGrowthRecords: function () {
+		if (!this.data.currentChild || !this.data.currentChild.name) {
+			return;
+		}
+
+		const storageKey = `growthRecords_${this.data.currentChild.name}`;
+		const growthRecords = wx.getStorageSync(storageKey) || [];
+
+		// 按日期降序排序记录
+		growthRecords.sort((a, b) => {
+			return new Date(b.date) - new Date(a.date);
+		});
+
+		this.setData({
+			growthRecords: growthRecords
+		}, () => {
+			// 数据设置完成后调用合并方法
+			this.mergeGrowthRecords();
+		});
+	},
+
+	// 修改删除记录的方法，按日期删除
+	deleteRecordByDate: function (e) {
+		const date = e.currentTarget.dataset.date;
+		const childName = this.data.currentChild.name;
+
+		wx.showModal({
+			title: '确认删除',
+			content: '确定要删除这条记录吗？',
+			success: res => {
+				if (res.confirm) {
+					// 获取所有需要删除的记录索引
+					const recordsToDelete = this.data.growthRecords.filter(record =>
+						record.date === date
+					);
+
+					// 获取剩余的记录
+					const remainingRecords = this.data.growthRecords.filter(record =>
+						record.date !== date
+					);
+
+					// 更新本地存储
+					const storageKey = `growthRecords_${childName}`;
+					wx.setStorageSync(storageKey, remainingRecords);
+
+					// 更新页面数据
+					this.setData({
+						growthRecords: remainingRecords
+					}, () => {
+						// 重新合并记录
+						this.mergeGrowthRecords();
+
+						wx.showToast({
+							title: '删除成功',
+							icon: 'success'
+						});
+					});
+				}
+			}
+		});
+	}
 });
