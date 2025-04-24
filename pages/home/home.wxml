@@ -101,6 +101,12 @@
         <view class="tip-text" style="position: relative; left: -22rpx; top: 20rpx">点击上方按钮查看详细生长曲线</view>
       </view>
 
+<!-- 在图表导航按钮下方添加 -->
+<view class="add-record-trigger-btn" bindtap="toggleAddForm">
+  <text class="btn-icon">+</text>
+  <text>添加生长记录</text>
+</view>
+
 
       <!-- 添加记录表单 -->
       <view class="add-form-mask" wx:if="{{showAddForm}}" bindtap="toggleAddForm"></view>
@@ -115,6 +121,12 @@
           <picker mode="date" value="{{newRecord.date}}" bindchange="onDateChange">
             <view class="picker">{{newRecord.date || '请选择日期'}}</view>
           </picker>
+        </view>
+        
+        <!-- 添加月龄选项 -->
+        <view class="form-item">
+          <text class="form-label">月龄 (月)</text>
+          <input type="digit" value="{{newRecord.ageInMonths}}" bindinput="onAgeInMonthsInput" placeholder="请输入宝宝月龄" />
         </view>
         
         <view class="form-item">
@@ -151,6 +163,7 @@
         <view class="record-item" wx:for="{{mergedRecords}}" wx:key="date">
           <view class="record-date">{{item.date}}</view>
           <view class="record-data">
+            <text wx:if="{{item.ageInMonths !== undefined && item.ageInMonths !== null}}">月龄: {{item.ageInMonths}}月</text>
             <text wx:if="{{item.height !== undefined && item.height !== null}}">身高: {{item.height}}cm</text>
             <text wx:if="{{item.weight !== undefined && item.weight !== null}}">体重: {{item.weight}}kg</text>
             <text wx:if="{{item.headCircumference !== undefined && item.headCircumference !== null}}">头围: {{item.headCircumference}}cm</text>

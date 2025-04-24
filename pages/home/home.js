@@ -355,6 +355,13 @@ Page({
 		});
 	},
 
+	// 月龄输入事件
+	onAgeInMonthsInput: function (e) {
+		this.setData({
+			'newRecord.ageInMonths': e.detail.value
+		});
+	},
+
 	// 添加生长记录
 	addGrowthRecord: function () {
 		// 验证输入
@@ -378,6 +385,7 @@ Page({
 		// 创建新记录
 		const newRecord = {
 			date: this.data.newRecord.date,
+			ageInMonths: this.data.newRecord.ageInMonths ? parseFloat(this.data.newRecord.ageInMonths) : null,
 			height: this.data.newRecord.height ? parseFloat(this.data.newRecord.height) : null,
 			weight: this.data.newRecord.weight ? parseFloat(this.data.newRecord.weight) : null,
 			headCircumference: this.data.newRecord.headCircumference ? parseFloat(this.data.newRecord.headCircumference) : null
@@ -403,6 +411,7 @@ Page({
 			showAddForm: false,
 			newRecord: {
 				date: '',
+				ageInMonths: '',  // 重置月龄字段
 				height: '',
 				weight: '',
 				headCircumference: ''
@@ -419,6 +428,96 @@ Page({
 		});
 	},
 
+	// 在获取生长记录数据后调用此方法合并同一天的记录
+	mergeGrowthRecords: function () {
+		const records = this.data.growthRecords;
+		const mergedMap = {};
+
+		// 按日期分组
+		records.forEach(record => {
+			if (!mergedMap[record.date]) {
+				mergedMap[record.date] = {};
+			}
+
+			// 合并同一天的数据
+			if (record.height !== null && record.height !== undefined) {
+				mergedMap[record.date].height = record.height;
+			}
+			if (record.weight !== null && record.weight !== undefined) {
+				mergedMap[record.date].weight = record.weight;
+			}
+			if (record.headCircumference !== null && record.headCircumference !== undefined) {
+				mergedMap[record.date].headCircumference = record.headCircumference;
+			}
+			if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
+				mergedMap[record.date].ageInMonths = record.ageInMonths;
+			}
+
+			// 保存日期
+			mergedMap[record.date].date = record.date;
+		});
+
+		// 转换为数组并按日期排序
+		const mergedRecords = Object.values(mergedMap).sort((a, b) => {
+			return new Date(b.date) - new Date(a.date); // 降序排列，最新的在前面
+		});
+
+		this.setData({
+			mergedRecords: mergedRecords
+		});
+	},
+  // ... 现有代码 ...
+  
+  // 修改删除记录的方法，按日期删除
+  deleteRecordByDate: function (e) {
+    const date = e.currentTarget.dataset.date;
+    const childName = this.data.currentChild.name;
+    
+    if (!childName) {
+      wx.showToast({
+        title: '无法删除记录',
+        icon: 'none'
+      });
+      return;
+    }
+
+    wx.showModal({
+      title: '确认删除',
+      content: '确定要删除这条记录吗？',
+      success: res => {
+        if (res.confirm) {
+          // 获取所有需要删除的记录索引
+          const recordsToDelete = this.data.growthRecords.filter(record =>
+            record.date === date
+          );
+
+          // 获取剩余的记录
+          const remainingRecords = this.data.growthRecords.filter(record =>
+            record.date !== date
+          );
+
+          // 更新本地存储
+          const storageKey = `growthRecords_${childName}`;
+          wx.setStorageSync(storageKey, remainingRecords);
+
+          // 更新页面数据
+          this.setData({
+            growthRecords: remainingRecords
+          }, () => {
+            // 重新合并记录
+            this.mergeGrowthRecords();
+
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            });
+          });
+        }
+      }
+    });
+  },
+  
+  // ... 现有代码 ...
 	// 导航到信息收集页面
 	navigateToInfoCollection: function () {
 		wx.navigateTo({
@@ -428,7 +527,7 @@ Page({
 
 	// 复诊提醒相关方法
 	// 加载复诊提醒信息
-	loadAppointmentInfo: function() {
+	loadAppointmentInfo: function () {
 		const childId = this.data.currentChild.name || '';
 		if (!childId) {
 			this.setData({
@@ -485,7 +584,7 @@ Page({
 	},
 
 	// 导航到复诊提醒设置页面
-	navigateToAppointmentSetting: function() {
+	navigateToAppointmentSetting: function () {
 		const childId = this.data.currentChild.name || '';
 		if (!childId) {
 			wx.showToast({
@@ -501,7 +600,7 @@ Page({
 	},
 
 	// 编辑复诊提醒
-	editAppointment: function() {
+	editAppointment: function () {
 		const childId = this.data.currentChild.name || '';
 		if (!childId) return;
 
@@ -511,21 +610,21 @@ Page({
 	},
 
 	// 显示删除复诊提醒确认对话框
-	showDeleteAppointmentModal: function() {
+	showDeleteAppointmentModal: function () {
 		this.setData({
 			showDeleteAppointmentModal: true
 		});
 	},
 
 	// 隐藏删除复诊提醒确认对话框
-	hideDeleteAppointmentModal: function() {
+	hideDeleteAppointmentModal: function () {
 		this.setData({
 			showDeleteAppointmentModal: false
 		});
 	},
 
 	// 删除复诊提醒
-	deleteAppointment: function() {
+	deleteAppointment: function () {
 		const childId = this.data.currentChild.name || '';
 		if (!childId) return;
 
@@ -549,7 +648,7 @@ Page({
 	},
 
 	// 请求订阅消息
-	requestSubscription: function() {
+	requestSubscription: function () {
 		const that = this;
 		const childId = this.data.currentChild.name || '';
 		if (!childId) return;

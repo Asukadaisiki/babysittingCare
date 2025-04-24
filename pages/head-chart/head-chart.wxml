@@ -11,35 +11,6 @@
     <text wx:if="{{childInfo.name}}">宝宝: {{childInfo.name}}</text>
   </view>
   
-  <!-- 添加记录按钮 -->
-  <view class="add-record-btn" bindtap="toggleAddForm">
-    <text class="btn-icon">+</text>
-    <text>添加头围记录</text>
-  </view>
-
-  <!-- 添加记录表单 -->
-  <view class="add-form-mask" wx:if="{{showAddForm}}" bindtap="toggleAddForm"></view>
-  <view class="add-form {{showAddForm ? 'show' : ''}}">
-    <view class="form-header">
-      <text class="form-title">添加头围记录</text>
-      <text class="close-btn" bindtap="toggleAddForm">×</text>
-    </view>
-    
-    <view class="form-item">
-      <text class="form-label">日期</text>
-      <picker mode="date" value="{{newRecord.date}}" bindchange="onDateChange">
-        <view class="picker">{{newRecord.date || '请选择日期'}}</view>
-      </picker>
-    </view>
-    
-    <view class="form-item">
-      <text class="form-label">头围 (cm)</text>
-      <input type="digit" value="{{newRecord.headCircumference}}" bindinput="onHeadCircumferenceInput" placeholder="请输入头围" />
-    </view>
-    
-    <view class="form-tip">请输入准确的头围数据</view>
-    
-    <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
-  </view>
+ 
 
 </view>

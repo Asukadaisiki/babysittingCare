@@ -71,28 +71,28 @@ Page({
   },
 
   // 切换添加记录表单的显示状态
-  toggleAddForm: function() {
+  toggleAddForm: function () {
     this.setData({
       showAddForm: !this.data.showAddForm
     });
   },
 
   // 处理日期选择变化
-  onDateChange: function(e) {
+  onDateChange: function (e) {
     this.setData({
       'newRecord.date': e.detail.value
     });
   },
 
   // 处理头围输入变化
-  onHeadCircumferenceInput: function(e) {
+  onHeadCircumferenceInput: function (e) {
     this.setData({
       'newRecord.headCircumference': e.detail.value
     });
   },
 
   // 添加生长记录
-  addGrowthRecord: function() {
+  addGrowthRecord: function () {
     // 验证输入
     if (!this.data.newRecord.date) {
       wx.showToast({
@@ -120,7 +120,7 @@ Page({
 
     // 添加到记录列表
     const updatedRecords = [...this.data.growthRecords, newRecord];
-    
+
     // 按日期排序
     updatedRecords.sort((a, b) => {
       return new Date(a.date) - new Date(b.date);
@@ -155,17 +155,17 @@ Page({
           }, 1500);
         } else {
           // 重新绘制图表
-          this.drawSimpleChart();
+          this.drawHeadCircumferenceChart();
         }
       }
     });
   },
 
   // 删除记录
-  deleteRecord: function(e) {
+  deleteRecord: function (e) {
     const index = e.currentTarget.dataset.index;
     const records = [...this.data.growthRecords];
-    
+
     // 从数组中移除该记录
     records.splice(index, 1);
 
@@ -190,170 +190,253 @@ Page({
     this.drawSimpleChart();
   },
 
-  // 返回上一页
-  navigateBack: function() {
-    wx.navigateBack();
-  },
-
   // 使用canvas绘制简单图表
   drawSimpleChart: function () {
-    // 获取系统信息以适应不同屏幕
-    const systemInfo = wx.getSystemInfoSync();
-    const screenWidth = systemInfo.windowWidth;
+    // 现有代码保持不变...
+    // 调用头围图表绘制函数 
+    this.drawHeadCircumferenceChart();
+  },
 
-    // 创建画布上下文
+  // 绘制头围曲线图
+  drawHeadCircumferenceChart: function () {
     const ctx = wx.createCanvasContext('head-chart');
-    const data = this.data.whoStandard;
+    const records = this.data.growthRecords;
 
-    // 设置图表尺寸 - 使用屏幕宽度
-    const width = screenWidth - 20; // 左右各留10px边距
-    const height = 300; // 增加高度
-    const padding = { top: 60, right: 30, bottom: 40, left: 50 }; // 增加左边距，给Y轴刻度留更多空间
+    // 使用 whoStandard 数据
+    const standardData = this.data.whoStandard;
 
-    // 计算图表区域
-    const chartWidth = width - padding.left - padding.right;
-    const chartHeight = height - padding.top - padding.bottom;
+    // 设置图表边距和尺寸
+    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    const canvasWidth = 320;
+    const canvasHeight = 300;
+    const chartWidth = canvasWidth - margin.left - margin.right;
+    const chartHeight = canvasHeight - margin.top - margin.bottom;
 
-    // 找出最大值和最小值
-    const maxAge = 12; // 根据实际数据设置最大月龄
-    const minAge = 0;
-    // 为头围数据设置合理的值范围
-    const maxValue = 50; // 设置一个合理的最大头围值
-    const minValue = 30; // 设置一个合理的最小头围值
-    const valueRange = maxValue - minValue;
+    // 找出所有记录的月龄范围
+    let minMonth = 0;
+    let maxMonth = 12; // 根据 whoStandard 数据调整为 12 个月
 
-    // 清空画布并设置背景
-    ctx.clearRect(0, 0, width, height);
+    // 如果有记录，则根据记录的月龄调整范围
+    if (records.length > 0) {
+      // 修改：优先使用用户输入的月龄数据
+      records.forEach(record => {
+        // 优先使用用户输入的月龄，如果没有则根据日期计算
+        let monthAge;
+        if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
+          monthAge = parseFloat(record.ageInMonths);
+        } else {
+          const birthDate = new Date(this.data.childInfo.birthDate);
+          const recordDate = new Date(record.date);
+          monthAge = (recordDate.getFullYear() - birthDate.getFullYear()) * 12 +
+            recordDate.getMonth() - birthDate.getMonth();
+        }
+
+        minMonth = Math.min(minMonth, monthAge);
+        maxMonth = Math.max(maxMonth, monthAge);
+      });
+    }
+
+    // 确保范围至少包含0-12个月
+    minMonth = Math.max(0, Math.min(minMonth, 0));
+    maxMonth = Math.max(12, maxMonth);
+
+    // 设置X轴和Y轴的比例尺
+    const xScale = chartWidth / maxMonth;
+    const yMin = 30; // 头围最小值 (cm)
+    const yMax = 55; // 头围最大值 (cm)
+    const yScale = chartHeight / (yMax - yMin);
+
+    // 清空画布
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.setFillStyle('#ffffff');
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
     // 绘制坐标轴
     ctx.beginPath();
     ctx.setLineWidth(1);
     ctx.setStrokeStyle('#333333');
-    ctx.moveTo(padding.left, height - padding.bottom);
-    ctx.lineTo(width - padding.right, height - padding.bottom);
-    ctx.moveTo(padding.left, padding.top);
-    ctx.lineTo(padding.left, height - padding.bottom);
+
+    // X轴
+    ctx.moveTo(margin.left, canvasHeight - margin.bottom);
+    ctx.lineTo(margin.left + chartWidth, canvasHeight - margin.bottom);
+
+    // Y轴
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, canvasHeight - margin.bottom);
     ctx.stroke();
 
-    // 绘制X轴刻度和网格线 - 确保文字颜色设置正确
-    const xStep = chartWidth / 6;
-    for (let i = 0; i <= 6; i++) {
-      const x = padding.left + i * xStep;
-      const age = Math.round(minAge + (maxAge - minAge) * (i / 6));
+    // 绘制X轴刻度和标签
+    ctx.setFontSize(10);
+    ctx.setTextAlign('center');
+    ctx.setTextBaseline('top');
+    ctx.setFillStyle('#333333');
 
-      // 刻度线
-      ctx.beginPath();
-      ctx.moveTo(x, height - padding.bottom);
-      ctx.lineTo(x, height - padding.bottom + 5);
-      ctx.stroke();
+    // 绘制X轴网格线和刻度
+    for (let month = 0; month <= maxMonth; month += 3) {
+      const x = margin.left + month * xScale;
 
-      // 刻度值 - 确保设置了文字颜色
-      ctx.setFontSize(10);
-      ctx.setTextAlign('center');
-      ctx.setFillStyle('#000000'); // 明确设置文字颜色为黑色
-      ctx.fillText(`${age}`, x, height - padding.bottom + 15);
-    }
-
-    // 绘制Y轴刻度和网格线
-    const yStep = chartHeight / 5;
-    for (let i = 0; i <= 5; i++) {
-      const y = padding.top + i * yStep;
-      const value = maxValue - (valueRange * (i / 5));
-      
-      // 刻度线
+      // 网格线
       ctx.beginPath();
       ctx.setLineWidth(0.5);
-      ctx.setStrokeStyle('#cccccc');
-      ctx.moveTo(padding.left, y);
-      ctx.lineTo(width - padding.right, y);
+      ctx.setStrokeStyle('#eeeeee');
+      ctx.moveTo(x, margin.top);
+      ctx.lineTo(x, canvasHeight - margin.bottom);
       ctx.stroke();
 
-      // 刻度文字
-      ctx.setFontSize(10);
-      ctx.setFillStyle('#333333');
-      ctx.fillText(`${value.toFixed(0)}cm`, padding.left - 30, y + 5);
+      // 刻度线
+      ctx.beginPath();
+      ctx.setLineWidth(1);
+      ctx.setStrokeStyle('#333333');
+      ctx.moveTo(x, canvasHeight - margin.bottom);
+      ctx.lineTo(x, canvasHeight - margin.bottom + 5);
+      ctx.stroke();
+
+      // 标签
+      ctx.fillText(`${month}月`, x, canvasHeight - margin.bottom + 8);
     }
 
-    // 绘制X轴标签
-    ctx.setFontSize(12); // 增大字体
-    ctx.setTextAlign('center');
-    ctx.setFillStyle('#333333'); // 确保文字颜色明显
-    ctx.fillText('月龄(月)', width / 2, height - 15); // 调整位置
+    // 绘制Y轴刻度和标签
+    ctx.setTextAlign('right');
+    ctx.setTextBaseline('middle');
 
-    // 绘制Y轴标签
-    ctx.save();
-    ctx.setFontSize(14); // 增大字体
-    ctx.setFillStyle('#333333'); // 确保文字颜色明显
-    // 调整位置，使标签更靠近Y轴但不重叠
-    ctx.translate(20, height / 2);
-    ctx.rotate(-Math.PI / 2);
+    // 绘制Y轴网格线和刻度
+    for (let cm = yMin; cm <= yMax; cm += 5) {
+      const y = canvasHeight - margin.bottom - (cm - yMin) * yScale;
+
+      // 网格线
+      ctx.beginPath();
+      ctx.setLineWidth(0.5);
+      ctx.setStrokeStyle('#eeeeee');
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(margin.left + chartWidth, y);
+      ctx.stroke();
+
+      // 刻度线
+      ctx.beginPath();
+      ctx.setLineWidth(1);
+      ctx.setStrokeStyle('#333333');
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(margin.left - 5, y);
+      ctx.stroke();
+
+      // 标签
+      ctx.fillText(`${cm}cm`, margin.left - 8, y);
+    }
+
+    // 绘制X轴和Y轴标题
+    ctx.setFontSize(12);
     ctx.setTextAlign('center');
-    ctx.fillText('头围(cm)', 0, 0); // 向左偏移，避免与刻度重叠
+    ctx.fillText('月龄(月)', canvasWidth / 2, canvasHeight - 10);
+
+    ctx.save();
+    ctx.translate(15, canvasHeight / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText('头围(cm)', 0, 0);
     ctx.restore();
 
-    // 绘制数据线
-    if (data.length > 0) {
-      ctx.beginPath();
-      ctx.setLineWidth(2);
-      ctx.setStrokeStyle('#2FC25B');
+    // 绘制WHO标准曲线
+    ctx.beginPath();
+    ctx.setStrokeStyle('#4caf50');
+    ctx.setLineWidth(2);
 
-      // 计算第一个点的位置
-      const firstPoint = data[0];
-      const firstX = padding.left + (firstPoint.age - minAge) / (maxAge - minAge) * chartWidth;
-      const firstY = height - padding.bottom - (firstPoint.value - minValue) / valueRange * chartHeight;
+    standardData.forEach((point, index) => {
+      const x = margin.left + point.age * xScale;
+      const y = canvasHeight - margin.bottom - (point.value - yMin) * yScale;
 
-      ctx.moveTo(firstX, firstY);
-
-      // 绘制其余点并连线
-      for (let i = 1; i < data.length; i++) {
-        const point = data[i];
-        const x = padding.left + (point.age - minAge) / (maxAge - minAge) * chartWidth;
-        const y = height - padding.bottom - (point.value - minValue) / valueRange * chartHeight;
-
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
         ctx.lineTo(x, y);
       }
+    });
+
+    ctx.stroke();
+
+    // 绘制宝宝的实际头围数据点
+    if (records.length > 0) {
+      // 先绘制连接线
+      ctx.beginPath();
+      ctx.setStrokeStyle('#e91e63');
+      ctx.setLineWidth(1.5);
+
+      // 按月龄排序记录
+      const sortedRecords = [...records].filter(record => record.headCircumference)
+        .map(record => {
+          let monthAge;
+          if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
+            monthAge = parseFloat(record.ageInMonths);
+          } else {
+            const birthDate = new Date(this.data.childInfo.birthDate);
+            const recordDate = new Date(record.date);
+            monthAge = (recordDate.getFullYear() - birthDate.getFullYear()) * 12 +
+              recordDate.getMonth() - birthDate.getMonth();
+          }
+          return {
+            ...record,
+            monthAge
+          };
+        })
+        .sort((a, b) => a.monthAge - b.monthAge);
+
+      // 绘制连接线
+      sortedRecords.forEach((record, index) => {
+        const x = margin.left + record.monthAge * xScale;
+        const y = canvasHeight - margin.bottom - (record.headCircumference - yMin) * yScale;
+
+        if (index === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
 
       ctx.stroke();
 
-      // 绘制数据点
-      for (let i = 0; i < data.length; i++) {
-        const point = data[i];
-        const x = padding.left + (point.age - minAge) / (maxAge - minAge) * chartWidth;
-        const y = height - padding.bottom - (point.value - minValue) / valueRange * chartHeight;
+      // 再绘制数据点和标签
+      ctx.setFillStyle('#e91e63');
 
+      sortedRecords.forEach(record => {
+        const x = margin.left + record.monthAge * xScale;
+        const y = canvasHeight - margin.bottom - (record.headCircumference - yMin) * yScale;
+
+        // 绘制数据点
         ctx.beginPath();
-        ctx.setFillStyle('#2FC25B');
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.beginPath();
-        ctx.setLineWidth(1);
-        ctx.setStrokeStyle('#ffffff');
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+        // 显示数值
+        ctx.setTextAlign('center');
+        ctx.setTextBaseline('bottom');
+        ctx.fillText(record.headCircumference.toString(), x, y - 8);
+      });
     }
 
     // 绘制图例
+    const legendX = margin.left + 10;
+    let legendY = margin.top + 10;
+    const legendSpacing = 20;
+
+    // WHO标准曲线图例
     ctx.beginPath();
-    ctx.setFillStyle('#2FC25B');
-    ctx.rect(padding.left, padding.top - 25, 15, 10);
-    ctx.fill();
-
-    ctx.setFontSize(12);
+    ctx.setStrokeStyle('#4caf50');
+    ctx.setLineWidth(2);
+    ctx.moveTo(legendX, legendY);
+    ctx.lineTo(legendX + 20, legendY);
+    ctx.stroke();
     ctx.setTextAlign('left');
-    ctx.setFillStyle('#333333');
-    ctx.fillText('WHO标准', padding.left + 20, padding.top - 17);
+    ctx.setTextBaseline('middle');
+    ctx.fillText('WHO标准', legendX + 25, legendY);
 
-    // 删除这一行，因为下面已经有一个draw调用
-    // ctx.draw(true); // 使用true参数，保留之前的绘制内容
+    // 宝宝数据图例
+    legendY += legendSpacing;
+    ctx.beginPath();
+    ctx.setFillStyle('#e91e63');
+    ctx.arc(legendX + 10, legendY, 4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillText('宝宝头围', legendX + 25, legendY);
 
-    // 执行绘制并添加回调函数
-    ctx.draw(false, () => {
-      console.log('头围图表绘制完成');
-    });
+    // 绘制到画布
+    ctx.draw();
   },
 
   // 返回上一页
