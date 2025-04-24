@@ -13,7 +13,8 @@
     "pages/about/about",
     "pages/head-chart/head-chart",
     "pages/height-chart/height-chart",
-    "pages/weight-chart/weight-chart"
+    "pages/weight-chart/weight-chart",
+    "pages/appointment-setting/appointment-setting"
   ],
   "tabBar": {
     "custom": true,

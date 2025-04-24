@@ -4,6 +4,20 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/appointment-setting/appointment-setting",
+          "pathName": "pages/appointment-setting/appointment-setting",
+          "query": "childId=4",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/help-feedback/help-feedback",
+          "pathName": "pages/help-feedback/help-feedback",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/height-chart/height-chart",
           "pathName": "pages/height-chart/height-chart",
           "query": "",

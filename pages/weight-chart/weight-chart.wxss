@@ -89,8 +89,8 @@
 }
 
 .add-form.show {
-  bottom: 90rpx;
-}
+    bottom: 5rpx;
+  }
 
 .form-header {
   display: flex;

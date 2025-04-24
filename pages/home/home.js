@@ -24,6 +24,14 @@ Page({
 		},
 		showAddForm: false,
 		showDeleteModal: false, // 删除宝宝确认对话框
+		// 复诊提醒相关数据
+		hasAppointment: false, // 是否有复诊提醒
+		appointmentCountdown: 0, // 复诊倒计时天数
+		appointmentInfo: {}, // 复诊信息
+		appointmentMonth: '', // 复诊月份（用于日历显示）
+		appointmentDay: '', // 复诊日期（用于日历显示）
+		hasSubscribed: false, // 是否已订阅消息
+		showDeleteAppointmentModal: false, // 删除复诊提醒确认对话框
 	},
 
 	onLoad: function (options) {
@@ -33,6 +41,8 @@ Page({
 		this.setCurrentDate();
 		// 从本地缓存获取宝宝信息
 		this.loadChildInfo();
+		// 加载复诊提醒信息
+		this.loadAppointmentInfo();
 	},
 
 	onShow: function () {
@@ -56,6 +66,9 @@ Page({
 				growthRecords
 			});
 		}
+
+		// 重新加载复诊提醒信息
+		this.loadAppointmentInfo();
 	},
 
 	// 设置当前日期
@@ -251,6 +264,11 @@ Page({
 		const storageKey = `growthRecords_${childName}`;
 		wx.removeStorageSync(storageKey);
 
+		// 删除复诊提醒信息
+		const appointmentKey = `appointment_${childName}`;
+		wx.removeStorageSync(appointmentKey);
+		wx.removeStorageSync(`subscribed_${childName}`);
+
 		// 从数组中删除该宝宝
 		childInfo.splice(index, 1);
 
@@ -276,6 +294,9 @@ Page({
 				growthRecords: newGrowthRecords,
 				showDeleteModal: false
 			});
+
+			// 重新加载复诊提醒信息
+			this.loadAppointmentInfo();
 		} else {
 			// 如果没有宝宝了
 			this.setData({
@@ -286,7 +307,11 @@ Page({
 				actualAge: 0,
 				correctedAge: 0,
 				growthRecords: [],
-				showDeleteModal: false
+				showDeleteModal: false,
+				hasAppointment: false,
+				appointmentInfo: {},
+				appointmentCountdown: 0,
+				hasSubscribed: false
 			});
 		}
 
@@ -300,6 +325,164 @@ Page({
 	navigateToInfoCollection: function () {
 		wx.navigateTo({
 			url: '/pages/info-collection/info-collection?mode=add'
+		});
+	},
+
+	// 复诊提醒相关方法
+	// 加载复诊提醒信息
+	loadAppointmentInfo: function() {
+		const childId = this.data.currentChild.name || '';
+		if (!childId) {
+			this.setData({
+				hasAppointment: false,
+				appointmentInfo: {},
+				appointmentCountdown: 0,
+				appointmentMonth: '',
+				appointmentDay: ''
+			});
+			return;
+		}
+
+		// 从本地存储获取复诊信息
+		const storageKey = `appointment_${childId}`;
+		const appointmentInfo = wx.getStorageSync(storageKey) || null;
+
+		if (appointmentInfo) {
+			// 计算倒计时天数
+			const today = new Date();
+			today.setHours(0, 0, 0, 0); // 设置为当天0点
+			const appointmentDate = new Date(appointmentInfo.appointmentDate);
+			appointmentDate.setHours(0, 0, 0, 0);
+
+			// 计算天数差
+			const timeDiff = appointmentDate.getTime() - today.getTime();
+			const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+			// 获取月份和日期，用于日历式显示
+			const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+			const month = months[appointmentDate.getMonth()];
+			const day = appointmentDate.getDate();
+
+			// 检查是否已订阅消息
+			const hasSubscribed = wx.getStorageSync(`subscribed_${childId}`) || false;
+
+			this.setData({
+				hasAppointment: true,
+				appointmentInfo: appointmentInfo,
+				appointmentCountdown: dayDiff > 0 ? dayDiff : 0,
+				appointmentMonth: month,
+				appointmentDay: day,
+				hasSubscribed: hasSubscribed
+			});
+		} else {
+			this.setData({
+				hasAppointment: false,
+				appointmentInfo: {},
+				appointmentCountdown: 0,
+				appointmentMonth: '',
+				appointmentDay: '',
+				hasSubscribed: false
+			});
+		}
+	},
+
+	// 导航到复诊提醒设置页面
+	navigateToAppointmentSetting: function() {
+		const childId = this.data.currentChild.name || '';
+		if (!childId) {
+			wx.showToast({
+				title: '请先添加宝宝信息',
+				icon: 'none'
+			});
+			return;
+		}
+
+		wx.navigateTo({
+			url: `/pages/appointment-setting/appointment-setting?childId=${encodeURIComponent(childId)}`
+		});
+	},
+
+	// 编辑复诊提醒
+	editAppointment: function() {
+		const childId = this.data.currentChild.name || '';
+		if (!childId) return;
+
+		wx.navigateTo({
+			url: `/pages/appointment-setting/appointment-setting?childId=${encodeURIComponent(childId)}&edit=true`
+		});
+	},
+
+	// 显示删除复诊提醒确认对话框
+	showDeleteAppointmentModal: function() {
+		this.setData({
+			showDeleteAppointmentModal: true
+		});
+	},
+
+	// 隐藏删除复诊提醒确认对话框
+	hideDeleteAppointmentModal: function() {
+		this.setData({
+			showDeleteAppointmentModal: false
+		});
+	},
+
+	// 删除复诊提醒
+	deleteAppointment: function() {
+		const childId = this.data.currentChild.name || '';
+		if (!childId) return;
+
+		// 删除本地存储的复诊信息
+		const storageKey = `appointment_${childId}`;
+		wx.removeStorageSync(storageKey);
+		wx.removeStorageSync(`subscribed_${childId}`);
+
+		this.setData({
+			hasAppointment: false,
+			appointmentInfo: {},
+			appointmentCountdown: 0,
+			hasSubscribed: false,
+			showDeleteAppointmentModal: false
+		});
+
+		wx.showToast({
+			title: '复诊提醒已删除',
+			icon: 'success'
+		});
+	},
+
+	// 请求订阅消息
+	requestSubscription: function() {
+		const that = this;
+		const childId = this.data.currentChild.name || '';
+		if (!childId) return;
+
+		// 请求订阅消息权限
+		// 注意：需要在微信公众平台申请模板ID
+		wx.requestSubscribeMessage({
+			tmplIds: ['这里替换为您申请的模板ID'], // 替换为实际的模板ID
+			success(res) {
+				console.log('订阅消息结果:', res);
+				// 如果用户同意订阅
+				if (res['这里替换为您申请的模板ID'] === 'accept') {
+					// 记录用户已订阅
+					wx.setStorageSync(`subscribed_${childId}`, true);
+					that.setData({
+						hasSubscribed: true
+					});
+
+					wx.showToast({
+						title: '订阅成功，将在复诊前提醒您',
+						icon: 'none'
+					});
+				}
+			},
+			fail(err) {
+				console.error('订阅消息失败:', err);
+				wx.showToast({
+					title: '订阅失败，请稍后重试',
+					icon: 'none'
+				});
+			}
 		});
 	},
 });

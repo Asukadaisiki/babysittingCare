@@ -75,7 +75,7 @@
     background-color: #FFF;
     border-radius: 30rpx 30rpx 0 0;
     z-index: 101;
-    padding: 40rpx 30rpx;
+    padding: 40rpx 40rpx;
     transition: bottom 0.3s;
     display: flex;
     flex-direction: column;
@@ -83,7 +83,7 @@
   }
   
   .add-form.show {
-    bottom: 90rpx;
+    bottom: 5rpx;
   }
   
   .form-header {
