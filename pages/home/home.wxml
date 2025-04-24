@@ -98,11 +98,14 @@
       <!-- 生长记录提示 -->
       <view class="growth-record-tip">
         <view class="tip-icon" style="position: relative; left: -6rpx; top: 15rpx"></view>
-        <view class="tip-text" style="position: relative; left: -22rpx; top: 20rpx">点击上方按钮查看详细生长曲线</view>
+        <view class="tip-text" style="position: relative; left: -22rpx; top: 20rpx">
+            <view>点击上方按钮查看详细生长曲线</view>
+            <view>点击下方按钮添加生长记录</view>
+        </view>
       </view>
 
 <!-- 在图表导航按钮下方添加 -->
-<view class="add-record-trigger-btn" bindtap="toggleAddForm">
+<view class="add-btn" bindtap="toggleAddForm">
   <text class="btn-icon">+</text>
   <text>添加生长记录</text>
 </view>

@@ -313,6 +313,7 @@
   margin-right: 10rpx;
 }
 
+
 .tip-text {
   font-size: 26rpx;
   color: #666;
@@ -551,6 +552,8 @@
   border-radius: 40rpx;
   font-size: 30rpx;
   margin-top: 1rpx;
+  flex-direction: row;
+  display: flex;
 }
 
 /* 历史记录列表样式 */
@@ -981,4 +984,14 @@
   border-radius: 30rpx;
   margin-top: 15rpx;
   border: none;
+}
+
+.add-btn {
+    background-color: #FF6B6B;
+    color: #FFF;
+    font-size: 30rpx;
+    padding: 20rpx 60rpx;
+    border-radius: 40rpx;
+    border: none;
+    margin-top: 20rpx;
 }
