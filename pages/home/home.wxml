@@ -132,34 +132,33 @@
           <input type="digit" value="{{newRecord.headCircumference}}" bindinput="onHeadCircumferenceInput" placeholder="请输入头围" />
         </view>
         
-        <view class="form-tip">至少填写一项数据即可</view>
+        <view class="form-tip">请输入准确的生长数据，不需要全部填写</view>
         
         <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
       </view>
-
+      
       <!-- 历史记录列表 -->
       <view class="records-list">
         <view class="list-header">
           <text class="header-title">历史记录</text>
-          <text class="record-count">共{{growthRecords.length}}条</text>
+          <text class="record-count">共{{mergedRecords.length}}条</text>
         </view>
         
-        <view class="empty-tip" wx:if="{{growthRecords.length === 0}}">
+        <view class="empty-tip" wx:if="{{mergedRecords.length === 0}}">
           暂无记录，请点击上方按钮添加
         </view>
         
-        <view class="record-item" wx:for="{{growthRecords}}" wx:key="index">
+        <view class="record-item" wx:for="{{mergedRecords}}" wx:key="date">
           <view class="record-date">{{item.date}}</view>
           <view class="record-data">
-            <text wx:if="{{item.height !== null}}">身高: {{item.height}}cm</text>
-            <text wx:if="{{item.weight !== null}}">体重: {{item.weight}}kg</text>
-            <text wx:if="{{item.headCircumference !== null}}">头围: {{item.headCircumference}}cm</text>
+            <text wx:if="{{item.height !== undefined && item.height !== null}}">身高: {{item.height}}cm</text>
+            <text wx:if="{{item.weight !== undefined && item.weight !== null}}">体重: {{item.weight}}kg</text>
+            <text wx:if="{{item.headCircumference !== undefined && item.headCircumference !== null}}">头围: {{item.headCircumference}}cm</text>
           </view>
-          <view class="delete-btn" bindtap="deleteRecord" data-index="{{index}}">删除</view>
+          <view class="delete-btn" bindtap="deleteRecordByDate" data-date="{{item.date}}">删除</view>
         </view>
       </view>
     </view>
-  </view>
 
   <!-- 无宝宝信息提示 -->
   <view class="no-child-tip" wx:if="{{!hasChild}}">
