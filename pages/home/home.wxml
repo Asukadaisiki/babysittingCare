@@ -1,5 +1,5 @@
 <!-- pages/home/home.wxml -->
-<view class="container">
+  <view class="container">
   <!-- 顶部欢迎区域 -->
   <view class="welcome-section">
     <view class="welcome-text">
@@ -166,6 +166,7 @@
     <view class="tip-text">您还没有添加宝宝信息</view>
     <button class="add-child-btn" bindtap="navigateToInfoCollection">添加宝宝</button>
   </view>
+</view>
   <!-- 育儿知识区域 -->
   <!-- 复诊提醒区域 -->
   <view class="appointment-section" style="width: 654rpx; display: block; box-sizing: border-box; margin-bottom: 20rpx;">
@@ -249,6 +250,4 @@
       <view class="knowledge-tag">喂养指南</view>
     </view>
   </view>
-
-  
 </view>
