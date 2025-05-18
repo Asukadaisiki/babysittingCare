@@ -83,8 +83,9 @@
       ]
     }
   },
-  "libVersion": "3.8.1",
+  "libVersion": "trial",
   "setting": {
     "compileHotReLoad": true
-  }
+  },
+  "projectname": "babysittingCare"
 }
