@@ -14,7 +14,9 @@
     "pages/head-chart/head-chart",
     "pages/height-chart/height-chart",
     "pages/weight-chart/weight-chart",
-    "pages/appointment-setting/appointment-setting"
+    "pages/appointment-setting/appointment-setting",
+    "pages/videoDetail/videoDetail",
+    "pages/articleDetail/articleDetail"
   ],
   "tabBar": {
     "custom": true,
@@ -52,6 +54,6 @@
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
-  "f2-chart": "@antv/wx-f2"
+    "f2-chart": "@antv/wx-f2"
   }
 }

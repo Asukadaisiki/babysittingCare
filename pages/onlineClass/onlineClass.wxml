@@ -21,7 +21,7 @@
     <swiper-item>
       <view class="single-card-container">
         <view class="single-card" bindtap="navigateToVideoDetail" data-id="{{item.id}}">
-          <image src="{{item.cover}}" class="single-card-image" mode="aspectFill" binderror="onImageError" />
+          <image src="{{item. coverUrl}}" class="single-card-image" mode="aspectFill" binderror="onImageError" />
           <text class="single-card-title">{{item.title}}</text>
         </view>
       </view>
@@ -41,7 +41,7 @@
     <swiper-item>
       <view class="single-card-container">
         <view class="single-card" bindtap="navigateToArticleDetail" data-id="{{item.id}}">
-          <image src="{{item.cover}}" class="single-card-image" mode="aspectFill" />
+          <image src="{{item. coverUrl}}" class="single-card-image" mode="aspectFill" />
           <text class="single-card-title">{{item.title}}</text>
         </view>
       </view>
