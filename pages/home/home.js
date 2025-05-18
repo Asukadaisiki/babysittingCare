@@ -90,34 +90,26 @@ Page({
 		const childInfo = wx.getStorageSync('childInfo') || [];
 
 		if (childInfo.length > 0) {
-			// 计算宝宝月龄
-			const firstChild = childInfo[0];
-			const birthDate = new Date(firstChild.birthDate);
-			const today = new Date();
+			// 获取当前选中的宝宝信息
+			const currentChild = childInfo[this.data.currentChildIndex];
 
-			// 计算月龄
-			const monthDiff = (today.getFullYear() - birthDate.getFullYear()) * 12 + today.getMonth() - birthDate.getMonth();
-			const childAge = monthDiff + (today.getDate() >= birthDate.getDate() ? 0 : -1);
-
-			// 计算实际月龄和矫正胎龄
-			const ageData = this.calculateAges(firstChild.birthDate, firstChild.expectedDate);
+			// 计算实际月龄和矫正月龄
+			const ages = this.calculateAges(currentChild.birthDate, currentChild.expectedDate);
 
 			this.setData({
+				childInfo,
 				hasChild: true,
-				childInfo: childInfo,
-				currentChild: firstChild,
-				childAge: childAge,
-				actualAge: ageData.actualAge,
-				correctedAge: ageData.correctedAge
+				currentChild,
+				actualAgeString: ages.actualAgeString,
+				correctedAgeString: ages.correctedAgeString
 			});
+
+			// 加载生长记录
+			this.loadGrowthRecords(currentChild.name);
 		} else {
 			this.setData({
 				hasChild: false,
-				childInfo: [],
-				currentChild: {},
-				childAge: 0,
-				actualAge: 0,
-				correctedAge: 0
+				childInfo: []
 			});
 		}
 	},
@@ -125,25 +117,98 @@ Page({
 	// 计算实际月龄和矫正胎龄
 	calculateAges: function (birthDateStr, expectedDateStr) {
 		const birthDate = new Date(birthDateStr);
-		const expectedDate = new Date(expectedDateStr);
 		const today = new Date();
 
-		// 计算实际月龄（月）
-		const monthDiff = (today.getFullYear() - birthDate.getFullYear()) * 12 + today.getMonth() - birthDate.getMonth();
-		const actualAge = monthDiff + (today.getDate() >= birthDate.getDate() ? 0 : -1);
+		// 计算实际月龄的详细信息
+		const actualAgeString = this.formatAgeString(birthDate, today);
 
-		// 计算预产期和出生日期之间的差值（月）
-		const correctionMonths = (expectedDate.getFullYear() - birthDate.getFullYear()) * 12 +
-			expectedDate.getMonth() - birthDate.getMonth() +
-			(expectedDate.getDate() >= birthDate.getDate() ? 0 : -1);
+		let correctedAgeString = '';
+		if (expectedDateStr) {
+			const expectedDate = new Date(expectedDateStr);
+			// 矫正思路：宝宝的矫正月龄 = 今天 - 预产期
+			correctedAgeString = this.formatAgeString(expectedDate, today);
+		} else {
+			// 如果没有预产期信息，则矫正月龄与实际月龄相同
+			correctedAgeString = actualAgeString;
+		}
 
-		// 矫正胎龄 = 实际月龄 + (预产期 - 出生日期)
-		const correctedAge = actualAge + correctionMonths;
-
-		return { actualAge, correctedAge };
+		return { actualAgeString, correctedAgeString };
 	},
 
-	// 计算年龄（月）
+	// 格式化月龄字符串
+	formatAgeString: function (startDate, endDate) {
+		let start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+		let end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+		if (start > end) {
+			// 如果开始日期在结束日期之后，例如预产期在今天之后
+			let diffTime = start.getTime() - end.getTime();
+			let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+			return `距离预产期 ${diffDays} 天`; // 或者其他您希望的提示
+		}
+
+		let years = end.getFullYear() - start.getFullYear();
+		let months = end.getMonth() - start.getMonth();
+		let days = end.getDate() - start.getDate();
+
+		if (days < 0) {
+			months--;
+			// 获取上个月的天数
+			end.setMonth(end.getMonth() - 1);
+			days += new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
+		}
+
+		if (months < 0) {
+			years--;
+			months += 12;
+		}
+
+		let result = '';
+		if (years > 0) {
+			result += `${years}年`;
+		}
+		if (months > 0) {
+			result += `${months}月`;
+		}
+		if (days > 0) {
+			result += `${days}天`;
+		}
+
+		if (result === '') {
+			// 如果年月日都为0，说明是同一天
+			return '0天'; // 或者 '当天'
+		}
+		// 如果只有年或月，但没有天，且总天数小于一个月，优先显示天数
+		if ((years * 365 + months * 30 + days) < 30 && !(months > 0 || years > 0)) {
+			let diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+			let totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+			if (totalDays === 0 && startDate.getDate() === endDate.getDate()) return '0天'; // 同一天
+			return `${totalDays}天`;
+		}
+
+		if (result !== '' && (months > 0 || years > 0) && days === 0 && (years * 365 + months * 30 + days) >= 30) {
+			// 如果有月或年，且天数为0，则不显示0天，除非总共就没几天
+		} else if (result === '' && days > 0) {
+			// 只有天数的情况
+			return `${days}天`;
+		} else if ((months === 0 && years === 0 && days > 0)) {
+			return `${days}天`;
+		}
+
+		// 如果只有月和年，且天数为0，去掉最后的“0天”
+		if (days === 0 && (months > 0 || years > 0)) {
+			if (result.endsWith('0天')) { // 理论上不会进入这里因为上面days>0才加天
+				result = result.substring(0, result.length - 2);
+			}
+		} else if (result === '' && days === 0 && months === 0 && years === 0) {
+			return '0天';
+		}
+
+		return result;
+	},
+
+
+	// 计算年龄（月） - 此函数现在可以考虑移除或重构，因为主要逻辑在 calculateAges 和 formatAgeString 中
 	calculateAge: function (birthDate) {
 		const birth = new Date(birthDate);
 		const today = new Date();
@@ -152,10 +217,10 @@ Page({
 		const monthDiff = (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth();
 		const age = monthDiff + (today.getDate() >= birth.getDate() ? 0 : -1);
 
-		return age;
+		return age; // 返回的是纯月份数字，如果还需要这个纯数字，可以保留
 	},
 
-	// 计算矫正年龄（月）
+	// 计算矫正年龄（月）- 此函数现在可以考虑移除或重构
 	calculateCorrectedAge: function (birthDate, expectedDate) {
 		if (!expectedDate) return this.calculateAge(birthDate);
 
@@ -173,7 +238,7 @@ Page({
 		// 矫正胎龄 = 实际月龄 - (预产期 - 出生日期)
 		const correctedAge = actualAge - correctionMonths;
 
-		return correctedAge > 0 ? correctedAge : 0;
+		return correctedAge > 0 ? correctedAge : 0; // 返回的是纯月份数字
 	},
 
 	// 切换图表标签 - 导航到对应的图表页面
@@ -208,36 +273,23 @@ Page({
 	},
 
 	// 切换当前儿童
+	// 切换选中的宝宝
 	switchChild: function (e) {
-		const index = parseInt(e.currentTarget.dataset.index);
-		console.log("切换到宝宝索引:", index);
+		const index = e.currentTarget.dataset.index;
+		const currentChild = this.data.childInfo[index];
 
-		// 如果切换到相同宝宝，不执行任何操作
-		if (index === this.data.currentChildIndex) {
-			return;
-		}
+		// 计算实际月龄和矫正月龄
+		const ages = this.calculateAges(currentChild.birthDate, currentChild.expectedDate);
 
-		// 获取宝宝信息
-		const childInfo = this.data.childInfo;
-		const selectedChild = childInfo[index];
-
-		// 计算宝宝的实际年龄和矫正年龄
-		const birthDate = selectedChild.birthDate;
-		const expectedDate = selectedChild.expectedDate;
-		const ageData = this.calculateAges(birthDate, expectedDate);
-
-		// 从缓存获取该宝宝的生长记录
-		const storageKey = `growthRecords_${selectedChild.name}`;
-		const growthRecords = wx.getStorageSync(storageKey) || [];
-
-		// 更新页面数据
 		this.setData({
 			currentChildIndex: index,
-			currentChild: selectedChild,
-			growthRecords: growthRecords,
-			actualAge: ageData.actualAge,
-			correctedAge: ageData.correctedAge
+			currentChild,
+			actualAgeString: ages.actualAgeString,
+			correctedAgeString: ages.correctedAgeString
 		});
+
+		// 加载选中宝宝的生长记录
+		this.loadGrowthRecords(currentChild.name);
 	},
 
 	// 显示删除宝宝确认对话框
@@ -466,58 +518,57 @@ Page({
 			mergedRecords: mergedRecords
 		});
 	},
-  // ... 现有代码 ...
-  
-  // 修改删除记录的方法，按日期删除
-  deleteRecordByDate: function (e) {
-    const date = e.currentTarget.dataset.date;
-    const childName = this.data.currentChild.name;
-    
-    if (!childName) {
-      wx.showToast({
-        title: '无法删除记录',
-        icon: 'none'
-      });
-      return;
-    }
+	// ... 现有代码 ...
 
-    wx.showModal({
-      title: '确认删除',
-      content: '确定要删除这条记录吗？',
-      success: res => {
-        if (res.confirm) {
-          // 获取所有需要删除的记录索引
-          const recordsToDelete = this.data.growthRecords.filter(record =>
-            record.date === date
-          );
+	// 修改删除记录的方法，按日期删除
+	deleteRecordByDate: function (e) {
+		const date = e.currentTarget.dataset.date;
+		const childName = this.data.currentChild.name;
 
-          // 获取剩余的记录
-          const remainingRecords = this.data.growthRecords.filter(record =>
-            record.date !== date
-          );
+		if (!childName) {
+			wx.showToast({
+				title: '无法删除记录',
+				icon: 'none'
+			});
+			return;
+		}
 
-          // 更新本地存储
-          const storageKey = `growthRecords_${childName}`;
-          wx.setStorageSync(storageKey, remainingRecords);
+		wx.showModal({
+			title: '确认删除',
+			content: '确定要删除这条记录吗？',
+			success: res => {
+				if (res.confirm) {
+					// 获取所有需要删除的记录索引
+					const recordsToDelete = this.data.growthRecords.filter(record =>
+						record.date === date
+					);
 
-          // 更新页面数据
-          this.setData({
-            growthRecords: remainingRecords
-          }, () => {
-            // 重新合并记录
-            this.mergeGrowthRecords();
+					// 获取剩余的记录
+					const remainingRecords = this.data.growthRecords.filter(record =>
+						record.date !== date
+					);
 
-            wx.showToast({
-              title: '删除成功',
-              icon: 'success'
-            });
-          });
-        }
-      }
-    });
-  },
-  
-  // ... 现有代码 ...
+					// 更新本地存储
+					const storageKey = `growthRecords_${childName}`;
+					wx.setStorageSync(storageKey, remainingRecords);
+
+					// 更新页面数据
+					this.setData({
+						growthRecords: remainingRecords
+					}, () => {
+						// 重新合并记录
+						this.mergeGrowthRecords();
+
+						wx.showToast({
+							title: '删除成功',
+							icon: 'success'
+						});
+					});
+				}
+			}
+		});
+	},
+
 	// 导航到信息收集页面
 	navigateToInfoCollection: function () {
 		wx.navigateTo({
@@ -529,55 +580,36 @@ Page({
 	// 加载复诊提醒信息
 	loadAppointmentInfo: function () {
 		const childId = this.data.currentChild.name || '';
-		if (!childId) {
-			this.setData({
-				hasAppointment: false,
-				appointmentInfo: {},
-				appointmentCountdown: 0,
-				appointmentMonth: '',
-				appointmentDay: ''
-			});
-			return;
-		}
+		if (!childId) return;
 
-		// 从本地存储获取复诊信息
-		const storageKey = `appointment_${childId}`;
-		const appointmentInfo = wx.getStorageSync(storageKey) || null;
+		// 使用全局方法获取复诊信息
+		const app = getApp();
+		const appointmentInfo = app.getAppointmentInfo(childId);
 
 		if (appointmentInfo) {
 			// 计算倒计时天数
 			const today = new Date();
-			today.setHours(0, 0, 0, 0); // 设置为当天0点
 			const appointmentDate = new Date(appointmentInfo.appointmentDate);
-			appointmentDate.setHours(0, 0, 0, 0);
-
-			// 计算天数差
 			const timeDiff = appointmentDate.getTime() - today.getTime();
 			const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
 
-			// 获取月份和日期，用于日历式显示
-			const months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-			const month = months[appointmentDate.getMonth()];
+			// 提取月份和日期用于显示
+			const month = appointmentDate.getMonth() + 1;
 			const day = appointmentDate.getDate();
-
-			// 检查是否已订阅消息
-			const hasSubscribed = wx.getStorageSync(`subscribed_${childId}`) || false;
 
 			this.setData({
 				hasAppointment: true,
 				appointmentInfo: appointmentInfo,
-				appointmentCountdown: dayDiff > 0 ? dayDiff : 0,
+				appointmentCountdown: dayDiff,
 				appointmentMonth: month,
 				appointmentDay: day,
-				hasSubscribed: hasSubscribed
+				hasSubscribed: wx.getStorageSync(`subscribed_${childId}`) || false
 			});
 		} else {
 			this.setData({
 				hasAppointment: false,
 				appointmentInfo: {},
 				appointmentCountdown: 0,
-				appointmentMonth: '',
-				appointmentDay: '',
 				hasSubscribed: false
 			});
 		}

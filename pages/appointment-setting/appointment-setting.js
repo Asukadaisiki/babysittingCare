@@ -103,7 +103,7 @@ Page({
   saveAppointment: function() {
     const appointmentInfo = this.data.appointmentInfo;
     const childId = this.data.childId;
-
+  
     // 验证必填字段
     if (!appointmentInfo.hospitalName) {
       wx.showToast({
@@ -112,7 +112,7 @@ Page({
       });
       return;
     }
-
+  
     if (!appointmentInfo.department) {
       wx.showToast({
         title: '请输入科室名称',
@@ -120,7 +120,7 @@ Page({
       });
       return;
     }
-
+  
     if (!appointmentInfo.appointmentDate) {
       wx.showToast({
         title: '请选择复诊日期',
@@ -128,19 +128,19 @@ Page({
       });
       return;
     }
-
+  
     // 生成唯一ID
     if (!appointmentInfo.id) {
       appointmentInfo.id = Date.now().toString();
     }
-
+  
     // 设置状态为待提醒
     appointmentInfo.status = 'pending';
-
-    // 保存到本地存储
-    const storageKey = `appointment_${childId}`;
-    wx.setStorageSync(storageKey, appointmentInfo);
-
+  
+    // 使用全局方法保存复诊信息
+    const app = getApp();
+    app.saveAppointmentInfo(childId, appointmentInfo);
+  
     // 提示保存成功
     wx.showToast({
       title: '保存成功',

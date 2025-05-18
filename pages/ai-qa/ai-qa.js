@@ -1,10 +1,13 @@
 // pages/ai-qa/ai-qa.js
+const app = getApp(); // 获取全局应用实例
+
 Page({
 
   /**
    * 页面的初始数据
    */
   data: {
+    userId: '',
     inputValue: '',
     messageList: [],
     loading: false,
@@ -22,29 +25,36 @@ Page({
    * 发送消息
    */
   sendMessage() {
-    const { inputValue, messageList } = this.data;
-    
+    const { inputValue, messageList, userId } = this.data;
+
     // 检查输入是否为空
     if (!inputValue.trim()) return;
-    
+
     // 添加用户消息到列表
     const userMessage = {
+      id: Date.now().toString(),
       type: 'user',
       content: inputValue,
-      time: new Date().getTime()
+      time: new Date().getTime(),
+      status: 'sent'
     };
-    
+
     const newMessageList = [...messageList, userMessage];
-    
+
     this.setData({
       messageList: newMessageList,
       inputValue: '',
       loading: true
     });
-    
+
+    // 保存消息到全局
+    if (userId) {
+      app.saveChatMessage(userId, userMessage);
+    }
+
     // 滚动到底部
     this.scrollToBottom();
-    
+
     // 模拟请求后端API
     this.requestAIResponse(inputValue);
   },
@@ -67,7 +77,7 @@ Page({
       //     this.handleRequestFail(err);
       //   }
       // });
-      
+
       // 模拟成功响应
       this.handleAIResponse(this.getSimulatedResponse(question));
     }, 1000);
@@ -77,22 +87,29 @@ Page({
    * 处理AI回复
    */
   handleAIResponse(answer) {
-    const { messageList } = this.data;
-    
+    const { messageList, userId } = this.data;
+
     // 添加AI回复到消息列表
     const aiMessage = {
+      id: Date.now().toString(),
       type: 'ai',
       content: answer,
-      time: new Date().getTime()
+      time: new Date().getTime(),
+      status: 'sent'
     };
-    
+
     const newMessageList = [...messageList, aiMessage];
-    
+
     this.setData({
       messageList: newMessageList,
       loading: false
     });
-    
+
+    // 保存消息到全局
+    if (userId) {
+      app.saveChatMessage(userId, aiMessage);
+    }
+
     // 滚动到底部
     this.scrollToBottom();
   },
@@ -106,7 +123,7 @@ Page({
       icon: 'none',
       duration: 2000
     });
-    
+
     this.setData({ loading: false });
   },
 
@@ -146,10 +163,55 @@ Page({
   },
 
   /**
+   * 清空聊天历史
+   */
+  clearHistory() {
+    const { userId } = this.data;
+
+    if (!userId) return;
+
+    wx.showModal({
+      title: '确认清空',
+      content: '确定要清空所有聊天记录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          // 清空聊天历史
+          const result = app.clearChatHistory(userId);
+
+          if (result.success) {
+            this.setData({
+              messageList: []
+            });
+            wx.showToast({
+              title: '已清空聊天记录',
+              icon: 'success'
+            });
+          }
+        }
+      }
+    });
+  },
+
+  /**
    * 生命周期函数--监听页面加载
    */
   onLoad(options) {
-    // 页面加载时可以初始化一些数据
+    // 获取用户ID
+    const userId = wx.getStorageSync('openid') || '';
+
+    this.setData({
+      userId
+    });
+
+    // 获取聊天历史
+    if (userId) {
+      const chatHistory = app.getChatHistory(userId);
+      if (chatHistory && chatHistory.messageList) {
+        this.setData({
+          messageList: chatHistory.messageList
+        });
+      }
+    }
   },
 
   /**

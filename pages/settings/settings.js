@@ -62,5 +62,25 @@ Page({
    */
   onShareAppMessage() {
 
+  },
+
+  // 处理登录点击事件
+  handleLogin: function() {
+    const app = getApp();
+    app.login().then(res => {
+      // 登录成功后更新页面显示
+      this.setData({
+        userInfo: res.userInfo
+      });
+      wx.showToast({
+        title: '登录成功',
+        icon: 'success'
+      });
+    }).catch(err => {
+      wx.showToast({
+        title: err.message,
+        icon: 'none'
+      });
+    });
   }
 })
