@@ -25,6 +25,12 @@
         </view>
       </picker>
     </view>
+    
+    <!-- 新增周龄输入字段 -->
+    <view class="input-group">
+      <text class="label">出生周龄</text>
+      <input class="input" type="number" placeholder="请输入出生周龄（如37周）" value="{{item.gestationalWeeks}}" bindinput="onGestationalWeeksInput" data-index="{{index}}"/>
+    </view>
 
     <view class="input-group">
       <text class="label">性别</text>

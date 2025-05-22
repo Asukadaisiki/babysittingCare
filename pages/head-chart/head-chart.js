@@ -1,10 +1,16 @@
 // pages/head-chart/head-chart.js
+
 const app = getApp();
+import * as echarts from 'echarts';
+
 
 Page({
   data: {
     childId: '',
     childInfo: {},
+    myechart:{
+        onInit:initChart
+    },
     // 直接初始化示例数据
     whoStandard: [
       { age: 0, value: 35, type: 'WHO标准' },
@@ -12,6 +18,156 @@ Page({
       { age: 6, value: 43, type: 'WHO标准' },
       { age: 9, value: 45, type: 'WHO标准' },
       { age: 12, value: 47, type: 'WHO标准' }
+    ],
+    boyHeadCircumferenceDataWho: [
+      { age: 0, l: 1, m: 34.4618, s: 0.03686, p3: 32.1, p15: 33.1, p50: 34.5, p85: 35.8, p97: 36.9, type: 'WHO标准' },
+      { age: 1, l: 1, m: 37.2759, s: 0.03133, p3: 35.1, p15: 36.1, p50: 37.3, p85: 38.5, p97: 39.5, type: 'WHO标准' },
+      { age: 2, l: 1, m: 39.1285, s: 0.02997, p3: 36.9, p15: 37.9, p50: 39.1, p85: 40.3, p97: 41.3, type: 'WHO标准' },
+      { age: 3, l: 1, m: 40.5135, s: 0.02918, p3: 38.3, p15: 39.3, p50: 40.5, p85: 41.7, p97: 42.7, type: 'WHO标准' },
+      { age: 4, l: 1, m: 41.6317, s: 0.02868, p3: 39.4, p15: 40.4, p50: 41.6, p85: 42.9, p97: 43.9, type: 'WHO标准' },
+      { age: 5, l: 1, m: 42.5576, s: 0.02837, p3: 40.3, p15: 41.3, p50: 42.6, p85: 43.8, p97: 44.8, type: 'WHO标准' },
+      { age: 6, l: 1, m: 43.3306, s: 0.02817, p3: 41.0, p15: 42.1, p50: 43.3, p85: 44.6, p97: 45.6, type: 'WHO标准' },
+      { age: 7, l: 1, m: 43.9803, s: 0.02804, p3: 41.7, p15: 42.7, p50: 44.0, p85: 45.3, p97: 46.3, type: 'WHO标准' },
+      { age: 8, l: 1, m: 44.53, s: 0.02796, p3: 42.2, p15: 43.2, p50: 44.5, p85: 45.8, p97: 46.9, type: 'WHO标准' },
+      { age: 9, l: 1, m: 44.9998, s: 0.02792, p3: 42.6, p15: 43.7, p50: 45.0, p85: 46.3, p97: 47.4, type: 'WHO标准' },
+      { age: 10, l: 1, m: 45.4051, s: 0.0279, p3: 43.0, p15: 44.1, p50: 45.4, p85: 46.7, p97: 47.8, type: 'WHO标准' },
+      { age: 11, l: 1, m: 45.7573, s: 0.02789, p3: 43.4, p15: 44.4, p50: 45.8, p85: 47.1, p97: 48.2, type: 'WHO标准' },
+      { age: 12, l: 1, m: 46.0661, s: 0.02789, p3: 43.6, p15: 44.7, p50: 46.1, p85: 47.4, p97: 48.5, type: 'WHO标准' },
+      { age: 13, l: 1, m: 46.3395, s: 0.02789, p3: 43.9, p15: 45.0, p50: 46.3, p85: 47.7, p97: 48.8, type: 'WHO标准' },
+      { age: 14, l: 1, m: 46.5844, s: 0.02791, p3: 44.1, p15: 45.2, p50: 46.6, p85: 47.9, p97: 49.0, type: 'WHO标准' },
+      { age: 15, l: 1, m: 46.806, s: 0.02792, p3: 44.3, p15: 45.5, p50: 46.8, p85: 48.2, p97: 49.3, type: 'WHO标准' },
+      { age: 16, l: 1, m: 47.0088, s: 0.02795, p3: 44.5, p15: 45.6, p50: 47.0, p85: 48.4, p97: 49.5, type: 'WHO标准' },
+      { age: 17, l: 1, m: 47.1962, s: 0.02797, p3: 44.7, p15: 45.8, p50: 47.2, p85: 48.6, p97: 49.7, type: 'WHO标准' },
+      { age: 18, l: 1, m: 47.3711, s: 0.028, p3: 44.9, p15: 46.0, p50: 47.4, p85: 48.7, p97: 49.9, type: 'WHO标准' },
+      { age: 19, l: 1, m: 47.5357, s: 0.02803, p3: 45.0, p15: 46.2, p50: 47.5, p85: 48.9, p97: 50.0, type: 'WHO标准' },
+      { age: 20, l: 1, m: 47.6919, s: 0.02806, p3: 45.2, p15: 46.3, p50: 47.7, p85: 49.1, p97: 50.2, type: 'WHO标准' },
+      { age: 21, l: 1, m: 47.8408, s: 0.0281, p3: 45.3, p15: 46.4, p50: 47.8, p85: 49.2, p97: 50.4, type: 'WHO标准' },
+      { age: 22, l: 1, m: 47.9833, s: 0.02813, p3: 45.4, p15: 46.6, p50: 48.0, p85: 49.4, p97: 50.5, type: 'WHO标准' },
+      { age: 23, l: 1, m: 48.1201, s: 0.02817, p3: 45.6, p15: 46.7, p50: 48.1, p85: 49.5, p97: 50.7, type: 'WHO标准' },
+      { age: 24, l: 1, m: 48.2515, s: 0.02821, p3: 45.7, p15: 46.8, p50: 48.3, p85: 49.7, p97: 50.8, type: 'WHO标准' },
+      { age: 25, l: 1, m: 48.3777, s: 0.02825, p3: 45.8, p15: 47.0, p50: 48.4, p85: 49.8, p97: 50.9, type: 'WHO标准' },
+      { age: 26, l: 1, m: 48.4989, s: 0.0283, p3: 45.9, p15: 47.1, p50: 48.5, p85: 49.9, p97: 51.1, type: 'WHO标准' },
+      { age: 27, l: 1, m: 48.6151, s: 0.02834, p3: 46.0, p15: 47.2, p50: 48.6, p85: 50.0, p97: 51.2, type: 'WHO标准' },
+      { age: 28, l: 1, m: 48.7264, s: 0.02838, p3: 46.1, p15: 47.3, p50: 48.7, p85: 50.2, p97: 51.3, type: 'WHO标准' },
+      { age: 29, l: 1, m: 48.8331, s: 0.02842, p3: 46.2, p15: 47.4, p50: 48.8, p85: 50.3, p97: 51.4, type: 'WHO标准' },
+      { age: 30, l: 1, m: 48.9351, s: 0.02847, p3: 46.3, p15: 47.5, p50: 48.9, p85: 50.4, p97: 51.6, type: 'WHO标准' },
+      { age: 31, l: 1, m: 49.0327, s: 0.02851, p3: 46.4, p15: 47.6, p50: 49.0, p85: 50.5, p97: 51.7, type: 'WHO标准' },
+      { age: 32, l: 1, m: 49.126, s: 0.02855, p3: 46.5, p15: 47.7, p50: 49.1, p85: 50.6, p97: 51.8, type: 'WHO标准' },
+      { age: 33, l: 1, m: 49.2153, s: 0.02859, p3: 46.6, p15: 47.8, p50: 49.2, p85: 50.7, p97: 51.9, type: 'WHO标准' },
+      { age: 34, l: 1, m: 49.3007, s: 0.02863, p3: 46.6, p15: 47.8, p50: 49.3, p85: 50.8, p97: 52.0, type: 'WHO标准' },
+      { age: 35, l: 1, m: 49.3826, s: 0.02867, p3: 46.7, p15: 47.9, p50: 49.4, p85: 50.8, p97: 52.0, type: 'WHO标准' },
+      { age: 36, l: 1, m: 49.4612, s: 0.02871, p3: 46.8, p15: 48.0, p50: 49.5, p85: 50.9, p97: 52.1, type: 'WHO标准' },
+      { age: 37, l: 1, m: 49.5367, s: 0.02875, p3: 46.9, p15: 48.1, p50: 49.5, p85: 51.0, p97: 52.2, type: 'WHO标准' },
+      { age: 38, l: 1, m: 49.6093, s: 0.02878, p3: 46.9, p15: 48.1, p50: 49.6, p85: 51.1, p97: 52.3, type: 'WHO标准' },
+      { age: 39, l: 1, m: 49.6791, s: 0.02882, p3: 47.0, p15: 48.2, p50: 49.7, p85: 51.2, p97: 52.4, type: 'WHO标准' },
+      { age: 40, l: 1, m: 49.7465, s: 0.02886, p3: 47.0, p15: 48.3, p50: 49.7, p85: 51.2, p97: 52.4, type: 'WHO标准' },
+      { age: 41, l: 1, m: 49.8116, s: 0.02889, p3: 47.1, p15: 48.3, p50: 49.8, p85: 51.3, p97: 52.5, type: 'WHO标准' },
+      { age: 42, l: 1, m: 49.8745, s: 0.02893, p3: 47.2, p15: 48.4, p50: 49.9, p85: 51.4, p97: 52.6, type: 'WHO标准' },
+      { age: 43, l: 1, m: 49.9354, s: 0.02896, p3: 47.2, p15: 48.4, p50: 49.9, p85: 51.4, p97: 52.7, type: 'WHO标准' },
+      { age: 44, l: 1, m: 49.9942, s: 0.02899, p3: 47.3, p15: 48.5, p50: 50.0, p85: 51.5, p97: 52.7, type: 'WHO标准' },
+      { age: 45, l: 1, m: 50.0512, s: 0.02903, p3: 47.3, p15: 48.5, p50: 50.1, p85: 51.6, p97: 52.8, type: 'WHO标准' },
+      { age: 46, l: 1, m: 50.1064, s: 0.02906, p3: 47.4, p15: 48.6, p50: 50.1, p85: 51.6, p97: 52.8, type: 'WHO标准' },
+      { age: 47, l: 1, m: 50.1598, s: 0.02909, p3: 47.4, p15: 48.6, p50: 50.2, p85: 51.7, p97: 52.9, type: 'WHO标准' },
+      { age: 48, l: 1, m: 50.2115, s: 0.02912, p3: 47.5, p15: 48.7, p50: 50.2, p85: 51.7, p97: 53.0, type: 'WHO标准' },
+      { age: 49, l: 1, m: 50.2617, s: 0.02915, p3: 47.5, p15: 48.7, p50: 50.3, p85: 51.8, p97: 53.0, type: 'WHO标准' },
+      { age: 50, l: 1, m: 50.3105, s: 0.02918, p3: 47.5, p15: 48.8, p50: 50.3, p85: 51.8, p97: 53.1, type: 'WHO标准' },
+      { age: 51, l: 1, m: 50.3578, s: 0.02921, p3: 47.6, p15: 48.8, p50: 50.4, p85: 51.9, p97: 53.1, type: 'WHO标准' },
+      { age: 52, l: 1, m: 50.4039, s: 0.02924, p3: 47.6, p15: 48.9, p50: 50.4, p85: 51.9, p97: 53.2, type: 'WHO标准' },
+      { age: 53, l: 1, m: 50.4488, s: 0.02927, p3: 47.7, p15: 48.9, p50: 50.4, p85: 52.0, p97: 53.2, type: 'WHO标准' },
+      { age: 54, l: 1, m: 50.4926, s: 0.02929, p3: 47.7, p15: 49.0, p50: 50.5, p85: 52.0, p97: 53.3, type: 'WHO标准' },
+      { age: 55, l: 1, m: 50.5354, s: 0.02932, p3: 47.7, p15: 49.0, p50: 50.5, p85: 52.1, p97: 53.3, type: 'WHO标准' },
+      { age: 56, l: 1, m: 50.5772, s: 0.02935, p3: 47.8, p15: 49.0, p50: 50.6, p85: 52.1, p97: 53.4, type: 'WHO标准' },
+      { age: 57, l: 1, m: 50.6183, s: 0.02938, p3: 47.8, p15: 49.1, p50: 50.6, p85: 52.2, p97: 53.4, type: 'WHO标准' },
+      { age: 58, l: 1, m: 50.6587, s: 0.0294, p3: 47.9, p15: 49.1, p50: 50.7, p85: 52.2, p97: 53.5, type: 'WHO标准' },
+      { age: 59, l: 1, m: 50.6984, s: 0.02943, p3: 47.9, p15: 49.2, p50: 50.7, p85: 52.2, p97: 53.5, type: 'WHO标准' },
+      { age: 60, l: 1, m: 50.7375, s: 0.02946, p3: 47.9, p15: 49.2, p50: 50.7, p85: 52.3, p97: 53.5, type: 'WHO标准' }
+    ],
+    girlHeadCircumferenceDataWho: [
+      { age: 0, l: 1, m: 33.8787, s: 0.03496, p3: 31.7, p15: 32.7, p50: 33.9, p85: 35.1, p97: 36.1, type: 'WHO标准' },
+      { age: 1, l: 1, m: 36.5463, s: 0.0321, p3: 34.3, p15: 35.3, p50: 36.5, p85: 37.8, p97: 38.8, type: 'WHO标准' },
+      { age: 2, l: 1, m: 38.2521, s: 0.03168, p3: 36.0, p15: 37.0, p50: 38.3, p85: 39.5, p97: 40.5, type: 'WHO标准' },
+      { age: 3, l: 1, m: 39.5328, s: 0.0314, p3: 37.2, p15: 38.2, p50: 39.5, p85: 40.8, p97: 41.9, type: 'WHO标准' },
+      { age: 4, l: 1, m: 40.5817, s: 0.03119, p3: 38.2, p15: 39.3, p50: 40.6, p85: 41.9, p97: 43.0, type: 'WHO标准' },
+      { age: 5, l: 1, m: 41.459, s: 0.03102, p3: 39.0, p15: 40.1, p50: 41.5, p85: 42.8, p97: 43.9, type: 'WHO标准' },
+      { age: 6, l: 1, m: 42.1995, s: 0.03087, p3: 39.7, p15: 40.8, p50: 42.2, p85: 43.5, p97: 44.6, type: 'WHO标准' },
+      { age: 7, l: 1, m: 42.829, s: 0.03075, p3: 40.4, p15: 41.5, p50: 42.8, p85: 44.2, p97: 45.3, type: 'WHO标准' },
+      { age: 8, l: 1, m: 43.3671, s: 0.03063, p3: 40.9, p15: 42.0, p50: 43.4, p85: 44.7, p97: 45.9, type: 'WHO标准' },
+      { age: 9, l: 1, m: 43.83, s: 0.03053, p3: 41.3, p15: 42.4, p50: 43.8, p85: 45.2, p97: 46.3, type: 'WHO标准' },
+      { age: 10, l: 1, m: 44.2319, s: 0.03044, p3: 41.7, p15: 42.8, p50: 44.2, p85: 45.6, p97: 46.8, type: 'WHO标准' },
+      { age: 11, l: 1, m: 44.5844, s: 0.03035, p3: 42.0, p15: 43.2, p50: 44.6, p85: 46.0, p97: 47.1, type: 'WHO标准' },
+      { age: 12, l: 1, m: 44.8965, s: 0.03027, p3: 42.3, p15: 43.5, p50: 44.9, p85: 46.3, p97: 47.5, type: 'WHO标准' },
+      { age: 13, l: 1, m: 45.1752, s: 0.03019, p3: 42.6, p15: 43.8, p50: 45.2, p85: 46.6, p97: 47.7, type: 'WHO标准' },
+      { age: 14, l: 1, m: 45.4265, s: 0.03012, p3: 42.9, p15: 44.0, p50: 45.4, p85: 46.8, p97: 48.0, type: 'WHO标准' },
+      { age: 15, l: 1, m: 45.6551, s: 0.03006, p3: 43.1, p15: 44.2, p50: 45.7, p85: 47.1, p97: 48.2, type: 'WHO标准' },
+      { age: 16, l: 1, m: 45.865, s: 0.02999, p3: 43.3, p15: 44.4, p50: 45.9, p85: 47.3, p97: 48.5, type: 'WHO标准' },
+      { age: 17, l: 1, m: 46.0598, s: 0.02993, p3: 43.5, p15: 44.6, p50: 46.1, p85: 47.5, p97: 48.7, type: 'WHO标准' },
+      { age: 18, l: 1, m: 46.2424, s: 0.02987, p3: 43.6, p15: 44.8, p50: 46.2, p85: 47.7, p97: 48.8, type: 'WHO标准' },
+      { age: 19, l: 1, m: 46.4152, s: 0.02982, p3: 43.8, p15: 45.0, p50: 46.4, p85: 47.8, p97: 49.0, type: 'WHO标准' },
+      { age: 20, l: 1, m: 46.5801, s: 0.02977, p3: 44.0, p15: 45.1, p50: 46.6, p85: 48.0, p97: 49.2, type: 'WHO标准' },
+      { age: 21, l: 1, m: 46.7384, s: 0.02972, p3: 44.1, p15: 45.3, p50: 46.7, p85: 48.2, p97: 49.4, type: 'WHO标准' },
+      { age: 22, l: 1, m: 46.8913, s: 0.02967, p3: 44.3, p15: 45.4, p50: 46.9, p85: 48.3, p97: 49.5, type: 'WHO标准' },
+      { age: 23, l: 1, m: 47.0391, s: 0.02962, p3: 44.4, p15: 45.6, p50: 47.0, p85: 48.5, p97: 49.7, type: 'WHO标准' },
+      { age: 24, l: 1, m: 47.1822, s: 0.02957, p3: 44.6, p15: 45.7, p50: 47.2, p85: 48.6, p97: 49.8, type: 'WHO标准' },
+      { age: 25, l: 1, m: 47.3204, s: 0.02953, p3: 44.7, p15: 45.9, p50: 47.3, p85: 48.8, p97: 49.9, type: 'WHO标准' },
+      { age: 26, l: 1, m: 47.4536, s: 0.02949, p3: 44.8, p15: 46.0, p50: 47.5, p85: 48.9, p97: 50.1, type: 'WHO标准' },
+      { age: 27, l: 1, m: 47.5817, s: 0.02945, p3: 44.9, p15: 46.1, p50: 47.6, p85: 49.0, p97: 50.2, type: 'WHO标准' },
+      { age: 28, l: 1, m: 47.7045, s: 0.02941, p3: 45.1, p15: 46.3, p50: 47.7, p85: 49.2, p97: 50.3, type: 'WHO标准' },
+      { age: 29, l: 1, m: 47.8219, s: 0.02937, p3: 45.2, p15: 46.4, p50: 47.8, p85: 49.3, p97: 50.5, type: 'WHO标准' },
+      { age: 30, l: 1, m: 47.934, s: 0.02933, p3: 45.3, p15: 46.5, p50: 47.9, p85: 49.4, p97: 50.6, type: 'WHO标准' },
+      { age: 31, l: 1, m: 48.041, s: 0.02929, p3: 45.4, p15: 46.6, p50: 48.0, p85: 49.5, p97: 50.7, type: 'WHO标准' },
+      { age: 32, l: 1, m: 48.1432, s: 0.02926, p3: 45.5, p15: 46.7, p50: 48.1, p85: 49.6, p97: 50.8, type: 'WHO标准' },
+      { age: 33, l: 1, m: 48.2408, s: 0.02922, p3: 45.6, p15: 46.8, p50: 48.2, p85: 49.7, p97: 50.9, type: 'WHO标准' },
+      { age: 34, l: 1, m: 48.3343, s: 0.02919, p3: 45.7, p15: 46.9, p50: 48.3, p85: 49.8, p97: 51.0, type: 'WHO标准' },
+      { age: 35, l: 1, m: 48.4239, s: 0.02915, p3: 45.8, p15: 47.0, p50: 48.4, p85: 49.9, p97: 51.1, type: 'WHO标准' },
+      { age: 36, l: 1, m: 48.5099, s: 0.02912, p3: 45.9, p15: 47.0, p50: 48.5, p85: 50.0, p97: 51.2, type: 'WHO标准' },
+      { age: 37, l: 1, m: 48.5926, s: 0.02909, p3: 45.9, p15: 47.1, p50: 48.6, p85: 50.1, p97: 51.3, type: 'WHO标准' },
+      { age: 38, l: 1, m: 48.6722, s: 0.02906, p3: 46.0, p15: 47.2, p50: 48.7, p85: 50.1, p97: 51.3, type: 'WHO标准' },
+      { age: 39, l: 1, m: 48.7489, s: 0.02903, p3: 46.1, p15: 47.3, p50: 48.7, p85: 50.2, p97: 51.4, type: 'WHO标准' },
+      { age: 40, l: 1, m: 48.8228, s: 0.029, p3: 46.2, p15: 47.4, p50: 48.8, p85: 50.3, p97: 51.5, type: 'WHO标准' },
+      { age: 41, l: 1, m: 48.8941, s: 0.02897, p3: 46.2, p15: 47.4, p50: 48.9, p85: 50.4, p97: 51.6, type: 'WHO标准' },
+      { age: 42, l: 1, m: 48.9629, s: 0.02894, p3: 46.3, p15: 47.5, p50: 49.0, p85: 50.4, p97: 51.6, type: 'WHO标准' },
+      { age: 43, l: 1, m: 49.0294, s: 0.02891, p3: 46.4, p15: 47.6, p50: 49.0, p85: 50.5, p97: 51.7, type: 'WHO标准' },
+      { age: 44, l: 1, m: 49.0937, s: 0.02888, p3: 46.4, p15: 47.6, p50: 49.1, p85: 50.6, p97: 51.8, type: 'WHO标准' },
+      { age: 45, l: 1, m: 49.156, s: 0.02886, p3: 46.5, p15: 47.7, p50: 49.2, p85: 50.6, p97: 51.8, type: 'WHO标准' },
+      { age: 46, l: 1, m: 49.2164, s: 0.02883, p3: 46.5, p15: 47.7, p50: 49.2, p85: 50.7, p97: 51.9, type: 'WHO标准' },
+      { age: 47, l: 1, m: 49.2751, s: 0.0288, p3: 46.6, p15: 47.8, p50: 49.3, p85: 50.7, p97: 51.9, type: 'WHO标准' },
+      { age: 48, l: 1, m: 49.3321, s: 0.02878, p3: 46.7, p15: 47.9, p50: 49.3, p85: 50.8, p97: 52.0, type: 'WHO标准' },
+      { age: 49, l: 1, m: 49.3877, s: 0.02875, p3: 46.7, p15: 47.9, p50: 49.4, p85: 50.9, p97: 52.1, type: 'WHO标准' },
+      { age: 50, l: 1, m: 49.4419, s: 0.02873, p3: 46.8, p15: 48.0, p50: 49.4, p85: 50.9, p97: 52.1, type: 'WHO标准' },
+      { age: 51, l: 1, m: 49.4947, s: 0.0287, p3: 46.8, p15: 48.0, p50: 49.5, p85: 51.0, p97: 52.2, type: 'WHO标准' },
+      { age: 52, l: 1, m: 49.5464, s: 0.02868, p3: 46.9, p15: 48.1, p50: 49.5, p85: 51.0, p97: 52.2, type: 'WHO标准' },
+      { age: 53, l: 1, m: 49.5969, s: 0.02865, p3: 46.9, p15: 48.1, p50: 49.6, p85: 51.1, p97: 52.3, type: 'WHO标准' },
+      { age: 54, l: 1, m: 49.6464, s: 0.02863, p3: 47.0, p15: 48.2, p50: 49.6, p85: 51.1, p97: 52.3, type: 'WHO标准' },
+      { age: 55, l: 1, m: 49.6947, s: 0.02861, p3: 47.0, p15: 48.2, p50: 49.7, p85: 51.2, p97: 52.4, type: 'WHO标准' },
+      { age: 56, l: 1, m: 49.7421, s: 0.02859, p3: 47.1, p15: 48.3, p50: 49.7, p85: 51.2, p97: 52.4, type: 'WHO标准' },
+      { age: 57, l: 1, m: 49.7885, s: 0.02856, p3: 47.1, p15: 48.3, p50: 49.8, p85: 51.3, p97: 52.5, type: 'WHO标准' },
+      { age: 58, l: 1, m: 49.8341, s: 0.02854, p3: 47.2, p15: 48.4, p50: 49.8, p85: 51.3, p97: 52.5, type: 'WHO标准' },
+      { age: 59, l: 1, m: 49.8789, s: 0.02852, p3: 47.2, p15: 48.4, p50: 49.9, p85: 51.4, p97: 52.6, type: 'WHO标准' },
+      { age: 60, l: 1, m: 49.9229, s: 0.0285, p3: 47.2, p15: 48.4, p50: 49.9, p85: 51.4, p97: 52.6, type: 'WHO标准' }
+    ],
+    boyHeadCircDataFenton: [
+      { age: 22, p3: 20.5, p10: 21.5, p50: 23.5, p90: 25.0, p97: 26.0, type: 'Fenton标准' },
+      { age: 24, p3: 22.5, p10: 23.5, p50: 25.5, p90: 27.0, p97: 28.0, type: 'Fenton标准' },
+      { age: 26, p3: 24.5, p10: 25.5, p50: 27.5, p90: 29.0, p97: 30.0, type: 'Fenton标准' },
+      { age: 28, p3: 26.5, p10: 27.5, p50: 29.5, p90: 31.0, p97: 32.0, type: 'Fenton标准' },
+      { age: 30, p3: 28.5, p10: 29.5, p50: 31.5, p90: 33.0, p97: 34.0, type: 'Fenton标准' },
+      { age: 32, p3: 30.5, p10: 31.5, p50: 33.5, p90: 35.0, p97: 36.0, type: 'Fenton标准' },
+      { age: 34, p3: 32.5, p10: 33.5, p50: 35.5, p90: 37.0, p97: 38.0, type: 'Fenton标准' },
+      { age: 36, p3: 34.0, p10: 35.0, p50: 37.0, p90: 38.5, p97: 39.5, type: 'Fenton标准' },
+      { age: 38, p3: 35.5, p10: 36.5, p50: 38.5, p90: 40.0, p97: 41.0, type: 'Fenton标准' },
+      { age: 40, p3: 36.5, p10: 37.5, p50: 39.5, p90: 41.0, p97: 42.0, type: 'Fenton标准' }
+    ],
+    girlHeadCircDataFenton: [
+      { age: 22, p3: 20.0, p10: 21.0, p50: 23.0, p90: 24.5, p97: 25.5, type: 'Fenton标准' },
+      { age: 24, p3: 22.0, p10: 23.0, p50: 25.0, p90: 26.5, p97: 27.5, type: 'Fenton标准' },
+      { age: 26, p3: 24.0, p10: 25.0, p50: 27.0, p90: 28.5, p97: 29.5, type: 'Fenton标准' },
+      { age: 28, p3: 26.0, p10: 27.0, p50: 29.0, p90: 30.5, p97: 31.5, type: 'Fenton标准' },
+      { age: 30, p3: 28.0, p10: 29.0, p50: 31.0, p90: 32.5, p97: 33.5, type: 'Fenton标准' },
+      { age: 32, p3: 30.0, p10: 31.0, p50: 33.0, p90: 34.5, p97: 35.5, type: 'Fenton标准' },
+      { age: 34, p3: 32.0, p10: 33.0, p50: 35.0, p90: 36.5, p97: 37.5, type: 'Fenton标准' },
+      { age: 36, p3: 33.5, p10: 34.5, p50: 36.5, p90: 38.0, p97: 39.0, type: 'Fenton标准' },
+      { age: 38, p3: 35.0, p10: 36.0, p50: 38.0, p90: 39.5, p97: 40.5, type: 'Fenton标准' },
+      { age: 40, p3: 36.0, p10: 37.0, p50: 39.0, p90: 40.5, p97: 41.5, type: 'Fenton标准' }
     ],
     growthRecords: [], // 生长记录数据
     newRecord: {
@@ -72,256 +228,47 @@ Page({
 
 
   // 使用canvas绘制简单图表
-  drawSimpleChart: function () {
-    // 现有代码保持不变...
-    // 调用头围图表绘制函数 
-    this.drawHeadCircumferenceChart();
-  },
-
-  // 绘制头围曲线图
-  drawHeadCircumferenceChart: function () {
-    const ctx = wx.createCanvasContext('head-chart');
-    const records = this.data.growthRecords;
-
-    // 使用 whoStandard 数据
-    const standardData = this.data.whoStandard;
-
-    // 设置图表边距和尺寸
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    const canvasWidth = 320;
-    const canvasHeight = 300;
-    const chartWidth = canvasWidth - margin.left - margin.right;
-    const chartHeight = canvasHeight - margin.top - margin.bottom;
-
-    // 找出所有记录的月龄范围
-    let minMonth = 0;
-    let maxMonth = 12; // 根据 whoStandard 数据调整为 12 个月
-
-    // 如果有记录，则根据记录的月龄调整范围
-    if (records.length > 0) {
-      // 修改：优先使用用户输入的月龄数据
-      records.forEach(record => {
-        // 优先使用用户输入的月龄，如果没有则根据日期计算
-        let monthAge;
-        if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
-          monthAge = parseFloat(record.ageInMonths);
-        } else {
-          const birthDate = new Date(this.data.childInfo.birthDate);
-          const recordDate = new Date(record.date);
-          monthAge = (recordDate.getFullYear() - birthDate.getFullYear()) * 12 +
-            recordDate.getMonth() - birthDate.getMonth();
-        }
-
-        minMonth = Math.min(minMonth, monthAge);
-        maxMonth = Math.max(maxMonth, monthAge);
-      });
-    }
-
-    // 确保范围至少包含0-12个月
-    minMonth = Math.max(0, Math.min(minMonth, 0));
-    maxMonth = Math.max(12, maxMonth);
-
-    // 设置X轴和Y轴的比例尺
-    const xScale = chartWidth / maxMonth;
-    const yMin = 30; // 头围最小值 (cm)
-    const yMax = 55; // 头围最大值 (cm)
-    const yScale = chartHeight / (yMax - yMin);
-
-    // 清空画布
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    ctx.setFillStyle('#ffffff');
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // 绘制坐标轴
-    ctx.beginPath();
-    ctx.setLineWidth(1);
-    ctx.setStrokeStyle('#333333');
-
-    // X轴
-    ctx.moveTo(margin.left, canvasHeight - margin.bottom);
-    ctx.lineTo(margin.left + chartWidth, canvasHeight - margin.bottom);
-
-    // Y轴
-    ctx.moveTo(margin.left, margin.top);
-    ctx.lineTo(margin.left, canvasHeight - margin.bottom);
-    ctx.stroke();
-
-    // 绘制X轴刻度和标签
-    ctx.setFontSize(10);
-    ctx.setTextAlign('center');
-    ctx.setTextBaseline('top');
-    ctx.setFillStyle('#333333');
-
-    // 绘制X轴网格线和刻度
-    for (let month = 0; month <= maxMonth; month += 3) {
-      const x = margin.left + month * xScale;
-
-      // 网格线
-      ctx.beginPath();
-      ctx.setLineWidth(0.5);
-      ctx.setStrokeStyle('#eeeeee');
-      ctx.moveTo(x, margin.top);
-      ctx.lineTo(x, canvasHeight - margin.bottom);
-      ctx.stroke();
-
-      // 刻度线
-      ctx.beginPath();
-      ctx.setLineWidth(1);
-      ctx.setStrokeStyle('#333333');
-      ctx.moveTo(x, canvasHeight - margin.bottom);
-      ctx.lineTo(x, canvasHeight - margin.bottom + 5);
-      ctx.stroke();
-
-      // 标签
-      ctx.fillText(`${month}月`, x, canvasHeight - margin.bottom + 8);
-    }
-
-    // 绘制Y轴刻度和标签
-    ctx.setTextAlign('right');
-    ctx.setTextBaseline('middle');
-
-    // 绘制Y轴网格线和刻度
-    for (let cm = yMin; cm <= yMax; cm += 5) {
-      const y = canvasHeight - margin.bottom - (cm - yMin) * yScale;
-
-      // 网格线
-      ctx.beginPath();
-      ctx.setLineWidth(0.5);
-      ctx.setStrokeStyle('#eeeeee');
-      ctx.moveTo(margin.left, y);
-      ctx.lineTo(margin.left + chartWidth, y);
-      ctx.stroke();
-
-      // 刻度线
-      ctx.beginPath();
-      ctx.setLineWidth(1);
-      ctx.setStrokeStyle('#333333');
-      ctx.moveTo(margin.left, y);
-      ctx.lineTo(margin.left - 5, y);
-      ctx.stroke();
-
-      // 标签
-      ctx.fillText(`${cm}cm`, margin.left - 8, y);
-    }
-
-    // 绘制X轴和Y轴标题
-    ctx.setFontSize(12);
-    ctx.setTextAlign('center');
-    ctx.fillText('月龄(月)', canvasWidth / 2, canvasHeight - 10);
-
-    ctx.save();
-    ctx.translate(15, canvasHeight / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText('头围(cm)', 0, 0);
-    ctx.restore();
-
-    // 绘制WHO标准曲线
-    ctx.beginPath();
-    ctx.setStrokeStyle('#4caf50');
-    ctx.setLineWidth(2);
-
-    standardData.forEach((point, index) => {
-      const x = margin.left + point.age * xScale;
-      const y = canvasHeight - margin.bottom - (point.value - yMin) * yScale;
-
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
+  initChart: function (canvas, width, height, dpr) {
+    const chart = echarts.init(canvas, null, {
+      width: width,
+      height: height,
+      devicePixelRatio: dpr // 像素比
     });
+    canvas.setChart(chart);
 
-    ctx.stroke();
-
-    // 绘制宝宝的实际头围数据点
-    if (records.length > 0) {
-      // 先绘制连接线
-      ctx.beginPath();
-      ctx.setStrokeStyle('#e91e63');
-      ctx.setLineWidth(1.5);
-
-      // 按月龄排序记录
-      const sortedRecords = [...records].filter(record => record.headCircumference)
-        .map(record => {
-          let monthAge;
-          if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
-            monthAge = parseFloat(record.ageInMonths);
-          } else {
-            const birthDate = new Date(this.data.childInfo.birthDate);
-            const recordDate = new Date(record.date);
-            monthAge = (recordDate.getFullYear() - birthDate.getFullYear()) * 12 +
-              recordDate.getMonth() - birthDate.getMonth();
-          }
-          return {
-            ...record,
-            monthAge
-          };
-        })
-        .sort((a, b) => a.monthAge - b.monthAge);
-
-      // 绘制连接线
-      sortedRecords.forEach((record, index) => {
-        const x = margin.left + record.monthAge * xScale;
-        const y = canvasHeight - margin.bottom - (record.headCircumference - yMin) * yScale;
-
-        if (index === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
+    var option = {
+      title: {
+        text: 'ECharts 入门示例'
+      },
+      tooltip: {},
+      legend: {
+        data: ['销量']
+      },
+      xAxis: {
+        data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
+      },
+      yAxis: {},
+      series: [
+        {
+          name: '销量',
+          type: 'bar',
+          data: [5, 20, 36, 10, 10, 20]
         }
-      });
-
-      ctx.stroke();
-
-      // 再绘制数据点和标签
-      ctx.setFillStyle('#e91e63');
-
-      sortedRecords.forEach(record => {
-        const x = margin.left + record.monthAge * xScale;
-        const y = canvasHeight - margin.bottom - (record.headCircumference - yMin) * yScale;
-
-        // 绘制数据点
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // 显示数值
-        ctx.setTextAlign('center');
-        ctx.setTextBaseline('bottom');
-        ctx.fillText(record.headCircumference.toString(), x, y - 8);
-      });
+      ]
     }
-
-    // 绘制图例
-    const legendX = margin.left + 10;
-    let legendY = margin.top + 10;
-    const legendSpacing = 20;
-
-    // WHO标准曲线图例
-    ctx.beginPath();
-    ctx.setStrokeStyle('#4caf50');
-    ctx.setLineWidth(2);
-    ctx.moveTo(legendX, legendY);
-    ctx.lineTo(legendX + 20, legendY);
-    ctx.stroke();
-    ctx.setTextAlign('left');
-    ctx.setTextBaseline('middle');
-    ctx.fillText('WHO标准', legendX + 25, legendY);
-
-    // 宝宝数据图例
-    legendY += legendSpacing;
-    ctx.beginPath();
-    ctx.setFillStyle('#e91e63');
-    ctx.arc(legendX + 10, legendY, 4, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.fillText('宝宝头围', legendX + 25, legendY);
-
-    // 绘制到画布
-    ctx.draw();
+    chart.setOption(option);
+    return chart;
   },
+
+  
 
   // 返回上一页
   navigateBack: function () {
     wx.navigateBack();
   }
 });
+
+
+
+
+

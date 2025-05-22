@@ -5,6 +5,7 @@ Page({
       childName: '',
       expectedDate: '',
       birthDate: '',
+      gestationalWeeks: '', // 新增周龄字段
       gender: '男',
       genderIndex: 0
     }],
@@ -28,6 +29,7 @@ Page({
           childName: '',
           expectedDate: '',
           birthDate: '',
+          gestationalWeeks: '', // 新增周龄字段
           gender: '男',
           genderIndex: 0
         }]
@@ -42,6 +44,7 @@ Page({
       childName: '',
       expectedDate: '',
       birthDate: '',
+      gestationalWeeks: '', // 新增周龄字段
       gender: '男',
       genderIndex: 0
     })
@@ -90,6 +93,14 @@ Page({
     this.setData({ children })
   },
 
+  // 新增周龄输入处理方法
+  onGestationalWeeksInput(e) {
+    const index = e.currentTarget.dataset.index
+    const children = [...this.data.children]
+    children[index].gestationalWeeks = e.detail.value
+    this.setData({ children })
+  },
+
   // 表单提交
   onSubmit() {
     const { children } = this.data
@@ -119,6 +130,25 @@ Page({
         })
         return
       }
+      
+      // 验证周龄输入
+      if (!child.gestationalWeeks) {
+        wx.showToast({
+          title: `请输入第${i + 1}个宝宝的出生周龄`,
+          icon: 'none'
+        })
+        return
+      }
+      
+      // 验证周龄是否为有效数字
+      const weeks = parseInt(child.gestationalWeeks)
+      if (isNaN(weeks) || weeks < 20 || weeks > 45) {
+        wx.showToast({
+          title: `第${i + 1}个宝宝的出生周龄应在20-45周之间`,
+          icon: 'none'
+        })
+        return
+      }
     }
 
     // 保存信息到本地存储
@@ -126,6 +156,7 @@ Page({
       name: child.childName,
       expectedDate: child.expectedDate,
       birthDate: child.birthDate,
+      gestationalWeeks: parseInt(child.gestationalWeeks), // 保存为数字类型
       gender: child.gender
     }))
 
@@ -140,25 +171,8 @@ Page({
     console.log('儿童信息已保存:', updatedChildInfo)
     
     // 跳转到首页
-    console.log('准备跳转到首页')
-    try {
-      wx.switchTab({
-        url: '/pages/home/home',
-        success: () => console.log('跳转成功'),
-        fail: (err) => {
-          console.error('跳转失败:', err)
-          wx.showToast({
-            title: '跳转失败，请重试',
-            icon: 'none'
-          })
-        }
-      })
-    } catch (e) {
-      console.error('跳转异常:', e)
-      wx.showToast({
-        title: '跳转异常，请重试',
-        icon: 'none'
-      })
-    }
+    wx.switchTab({
+      url: '/pages/home/home'
+    })
   }
 })
