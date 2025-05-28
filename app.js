@@ -16,8 +16,8 @@ App({
     // 使用自定义登录函数
     this.login().then(res => {
       console.log('登录成功', res);
-      // 获取儿童信息
-      this.getChildInfo();
+      // 获取儿童信息 (登录成功时已经获取并保存了)
+      // this.getChildInfo(); // 登录函数中已处理，此处不再需要
       // 检查是否有小孩信息，决定启动页面
       this.checkChildInfoAndNavigate();
       // 尝试同步数据
@@ -31,7 +31,8 @@ App({
 
   // 检查是否有小孩信息并导航到相应页面
   checkChildInfoAndNavigate() {
-    const childInfo = wx.getStorageSync('childInfo') || []
+    // 从 globalData 获取 childInfo，因为登录成功后会更新 globalData
+    const childInfo = this.globalData.childInfo || [];
 
     // 获取当前页面路径
     const pages = getCurrentPages()
@@ -91,9 +92,11 @@ App({
                     wx.setStorageSync('session_key', res.data.session_key);
                   }
 
-                  // 保存childInfo到本地存储
+                  // 保存childInfo到本地存储并更新全局变量
+                  // 确保从后端获取的 childInfo 包含 growthRecords 字段
                   const childInfo = res.data.childInfo || [];
                   wx.setStorageSync('childInfo', childInfo);
+                  this.globalData.childInfo = childInfo; // 更新全局变量
 
                   // 保存token到本地存储（如果有）
                   if (res.data.token) {
@@ -101,7 +104,7 @@ App({
                   }
 
                   // 根据是否有childInfo决定导航
-                  this.checkChildInfoAndNavigate();
+                  // this.checkChildInfoAndNavigate(); // 在then/catch中调用
 
                   resolve({
                     userInfo: res.data.userInfo,
@@ -133,44 +136,18 @@ App({
   },
   // 获取儿童信息
   getChildInfo() {
-    // 先尝试从本地缓存获取
-    let childInfo = wx.getStorageSync('childInfo') || [];
+    // 直接从 globalData 获取，globalData 在登录时或 saveChildInfo 时已更新
+    // 如果 globalData.childInfo 为 null，则尝试从本地缓存获取
+    let childInfo = this.globalData.childInfo;
 
-    // 如果本地没有缓存，且网络可用，则从服务器获取
-    if (childInfo.length === 0 && this.globalData.networkStatus) {
-      // 获取用户的 openid
-      const openid = wx.getStorageSync('openid');
-      if (openid) {
-        // 显示加载提示
-        wx.showLoading({
-          title: '获取宝宝信息...',
-        });
-
-        // 从服务器获取儿童信息
-        wx.request({
-          url: 'https://pinf.top/api/getChildInfo',
-          method: 'GET',
-          data: {
-            openid: openid
-          },
-          success: (res) => {
-            if (res.statusCode === 200 && res.data.success) {
-              childInfo = res.data.childInfo || [];
-              // 保存到本地缓存
-              wx.setStorageSync('childInfo', childInfo);
-              // 更新全局变量
-              this.globalData.childInfo = childInfo;
-            }
-          },
-          complete: () => {
-            wx.hideLoading();
-          }
-        });
-      }
+    if (!childInfo) {
+      childInfo = wx.getStorageSync('childInfo') || [];
+      this.globalData.childInfo = childInfo; // 更新 globalData
     }
 
-    // 更新全局变量
-    this.globalData.childInfo = childInfo;
+    // 注意：这里的 getChildInfo 主要用于在其他页面获取当前 childInfo
+    // 首次加载和同步逻辑主要在 login 和 syncToServer 中处理
+
     return childInfo;
   },
 
@@ -182,9 +159,10 @@ App({
     this.globalData.childInfo = childInfo;
 
     // 添加到待同步队列
+    // 这里直接将完整的 childInfo 结构添加到队列
     this.addToSyncQueue({
       type: 'childInfo',
-      data: childInfo,
+      data: childInfo, // 包含 growthRecords 的完整 childInfo 数组
       timestamp: Date.now()
     });
 
@@ -236,12 +214,15 @@ App({
 
     // 发送同步请求
     wx.request({
-      url: 'https://pinf.top/api/syncData',
+      url: 'https://pinf.top/api/syncData', // 假设后端有一个统一的同步接口
       method: 'POST',
+      header: {
+        'Authorization': `Bearer ${token}` // 使用 token 进行认证
+      },
       data: {
-        openid: openid,
+        openid: openid, // 仍然传递 openid，后端可能需要
+        data: queue, // 传递整个待同步队列
         token: token,
-        data: queue
       },
       success: (res) => {
         if (res.statusCode === 200 && res.data.success) {
@@ -252,11 +233,46 @@ App({
           // 更新最后同步时间
           this.globalData.lastSyncTime = Date.now();
           wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
+
+          console.log('数据同步成功', res.data);
+
+          // TODO: 根据后端返回的数据，可能需要更新本地的 childInfo, appointmentInfo, chatHistory 等
+          // 例如：如果后端返回了最新的 childInfo，需要更新本地缓存和 globalData
+          if (res.data.latestChildInfo) {
+            this.globalData.childInfo = res.data.latestChildInfo;
+            wx.setStorageSync('childInfo', res.data.latestChildInfo);
+          }
+          // 类似地处理 appointmentInfo 和 chatHistory
+          if (res.data.latestAppointmentInfo) {
+            this.globalData.appointmentInfo = res.data.latestAppointmentInfo;
+            // 需要遍历保存到每个 childId 对应的 storageKey
+            for (const childId in res.data.latestAppointmentInfo) {
+              wx.setStorageSync(`appointment_${childId}`, res.data.latestAppointmentInfo[childId]);
+            }
+          }
+          if (res.data.latestChatHistory) {
+            this.globalData.chatHistory = res.data.latestChatHistory;
+            // 需要遍历保存到每个 userId 对应的 storageKey
+            for (const userId in res.data.latestChatHistory) {
+              wx.setStorageSync(`chat_history_${userId}`, res.data.latestChatHistory[userId]);
+            }
+          }
+
+
+        } else {
+          console.error('数据同步失败', res.data);
+          // TODO: 根据后端返回的错误信息，可能需要处理冲突或重试
         }
+      },
+      fail: (err) => {
+        console.error('同步请求失败:', err);
+        // TODO: 处理网络错误，可能需要指数退避重试
       },
       complete: () => {
         // 重置同步状态
         this.globalData.isDataSyncing = false;
+        // 无论成功失败，都尝试再次同步，以处理可能的新增数据或网络恢复
+        // setTimeout(() => this.syncToServer(), 5000); // 可以考虑定时重试
       }
     });
   },
@@ -276,15 +292,29 @@ App({
 
   // 获取复诊信息
   getAppointmentInfo(childId) {
-    // 先尝试从本地缓存获取
-    const storageKey = `appointment_${childId}`;
-    let appointmentInfo = wx.getStorageSync(storageKey) || null;
+    // 先尝试从 globalData 获取
+    let appointmentInfo = this.globalData.appointmentInfo ? this.globalData.appointmentInfo[childId] : null;
 
-    // 如果本地没有缓存，且网络可用，则从服务器获取
+    // 如果 globalData 中没有，再尝试从本地缓存获取
+    if (!appointmentInfo) {
+      const storageKey = `appointment_${childId}`;
+      appointmentInfo = wx.getStorageSync(storageKey) || null;
+      // 如果从本地缓存获取到了，更新 globalData
+      if (appointmentInfo) {
+        if (!this.globalData.appointmentInfo) {
+          this.globalData.appointmentInfo = {};
+        }
+        this.globalData.appointmentInfo[childId] = appointmentInfo;
+      }
+    }
+
+
+    // 如果本地和 globalData 都没有，且网络可用，则从服务器获取
     if (!appointmentInfo && this.globalData.networkStatus) {
       // 获取用户的 openid
       const openid = wx.getStorageSync('openid');
-      if (openid) {
+      const token = wx.getStorageSync('token'); // 获取 token
+      if (openid && token) {
         // 显示加载提示
         wx.showLoading({
           title: '获取复诊信息...',
@@ -294,6 +324,9 @@ App({
         wx.request({
           url: 'https://pinf.top/api/getAppointmentInfo',
           method: 'GET',
+          header: {
+            'Authorization': `Bearer ${token}` // 使用 token 进行认证
+          },
           data: {
             openid: openid,
             childId: childId
@@ -303,9 +336,13 @@ App({
               appointmentInfo = res.data.appointmentInfo || null;
               // 保存到本地缓存
               if (appointmentInfo) {
+                const storageKey = `appointment_${childId}`;
                 wx.setStorageSync(storageKey, appointmentInfo);
               }
               // 更新全局变量
+              if (!this.globalData.appointmentInfo) {
+                this.globalData.appointmentInfo = {};
+              }
               this.globalData.appointmentInfo[childId] = appointmentInfo;
             }
           },
@@ -316,11 +353,7 @@ App({
       }
     }
 
-    // 更新全局变量
-    if (!this.globalData.appointmentInfo) {
-      this.globalData.appointmentInfo = {};
-    }
-    this.globalData.appointmentInfo[childId] = appointmentInfo;
+    // 返回当前获取到的 appointmentInfo (可能是本地缓存的，也可能是刚从服务器获取的，或者为 null)
     return appointmentInfo;
   },
 
@@ -379,7 +412,7 @@ App({
   globalData: {
     userInfo: null,
     role: null, // 'user' or 'doctor',
-    childInfo: null, // 当前使用的儿童信息
+    childInfo: null, // 当前使用的儿童信息，修改为数组，包含 growthRecords
     appointmentInfo: {}, // 添加复诊信息全局变量
     chatHistory: {}, // 添加聊天历史全局变量
     // 同步相关状态
@@ -387,89 +420,7 @@ App({
     lastSyncTime: 0,      // 最后同步时间戳
     pendingSyncData: [],  // 待同步到服务器的数据
     networkStatus: true,   // 网络状态
-    // WHO生长标准数据（LMS参数）
-    whoData: {
-      boy: {
-        weight: [
-          { ageMonth: 0, L: -0.0631, M: 3.530, S: 0.1547 }, // 0月龄
-          { ageMonth: 1, L: 0.0067, M: 4.327, S: 0.1469 },   // 1月龄
-          { ageMonth: 2, L: 0.0424, M: 5.118, S: 0.1428 },   // 2月龄
-          { ageMonth: 3, L: 0.0751, M: 5.846, S: 0.1409 },   // 3月龄
-          { ageMonth: 4, L: 0.1053, M: 6.509, S: 0.1400 },   // 4月龄
-          { ageMonth: 5, L: 0.1330, M: 7.110, S: 0.1397 },   // 5月龄
-          { ageMonth: 6, L: 0.1585, M: 7.651, S: 0.1396 },   // 6月龄
-          { ageMonth: 7, L: 0.1818, M: 8.138, S: 0.1397 },   // 7月龄
-          { ageMonth: 8, L: 0.2032, M: 8.577, S: 0.1398 },   // 8月龄
-          { ageMonth: 9, L: 0.2227, M: 8.975, S: 0.1399 },   // 9月龄
-          { ageMonth: 10, L: 0.2404, M: 9.339, S: 0.1400 },  // 10月龄
-          { ageMonth: 11, L: 0.2566, M: 9.673, S: 0.1401 },  // 11月龄
-          { ageMonth: 12, L: 0.2714, M: 9.980, S: 0.1402 },  // 12月龄
-          { ageMonth: 18, L: 0.3394, M: 11.473, S: 0.1407 }, // 18月龄
-          { ageMonth: 24, L: 0.3834, M: 12.687, S: 0.1412 }, // 24月龄
-          { ageMonth: 30, L: 0.4132, M: 13.776, S: 0.1418 }, // 30月龄
-          { ageMonth: 36, L: 0.4330, M: 14.784, S: 0.1425 }  // 36月龄
-        ],
-        height: [
-          { ageMonth: 0, L: 1, M: 49.9, S: 0.0380 },  // 0月龄
-          { ageMonth: 1, L: 1, M: 54.7, S: 0.0364 },  // 1月龄
-          { ageMonth: 2, L: 1, M: 58.4, S: 0.0352 },  // 2月龄
-          { ageMonth: 3, L: 1, M: 61.4, S: 0.0342 },  // 3月龄
-          { ageMonth: 4, L: 1, M: 63.9, S: 0.0334 },  // 4月龄
-          { ageMonth: 5, L: 1, M: 65.9, S: 0.0327 },  // 5月龄
-          { ageMonth: 6, L: 1, M: 67.6, S: 0.0321 },  // 6月龄
-          { ageMonth: 7, L: 1, M: 69.2, S: 0.0317 },  // 7月龄
-          { ageMonth: 8, L: 1, M: 70.6, S: 0.0314 },  // 8月龄
-          { ageMonth: 9, L: 1, M: 72.0, S: 0.0312 },  // 9月龄
-          { ageMonth: 10, L: 1, M: 73.3, S: 0.0311 }, // 10月龄
-          { ageMonth: 11, L: 1, M: 74.5, S: 0.0310 }, // 11月龄
-          { ageMonth: 12, L: 1, M: 75.7, S: 0.0309 }, // 12月龄
-          { ageMonth: 18, L: 1, M: 82.3, S: 0.0310 }, // 18月龄
-          { ageMonth: 24, L: 1, M: 87.8, S: 0.0314 }, // 24月龄
-          { ageMonth: 30, L: 1, M: 92.5, S: 0.0320 }, // 30月龄
-          { ageMonth: 36, L: 1, M: 96.9, S: 0.0327 }  // 36月龄
-        ]
-      },
-      girl: {
-        weight: [
-          { ageMonth: 0, L: -0.0243, M: 3.400, S: 0.1428 }, // 0月龄
-          { ageMonth: 1, L: 0.0222, M: 4.107, S: 0.1367 },  // 1月龄
-          { ageMonth: 2, L: 0.0668, M: 4.812, S: 0.1325 },  // 2月龄
-          { ageMonth: 3, L: 0.1091, M: 5.449, S: 0.1294 },  // 3月龄
-          { ageMonth: 4, L: 0.1493, M: 6.022, S: 0.1270 },  // 4月龄
-          { ageMonth: 5, L: 0.1873, M: 6.539, S: 0.1252 },  // 5月龄
-          { ageMonth: 6, L: 0.2233, M: 7.006, S: 0.1238 },  // 6月龄
-          { ageMonth: 7, L: 0.2572, M: 7.431, S: 0.1227 },  // 7月龄
-          { ageMonth: 8, L: 0.2891, M: 7.820, S: 0.1219 },  // 8月龄
-          { ageMonth: 9, L: 0.3191, M: 8.178, S: 0.1212 },  // 9月龄
-          { ageMonth: 10, L: 0.3471, M: 8.510, S: 0.1207 }, // 10月龄
-          { ageMonth: 11, L: 0.3734, M: 8.820, S: 0.1203 }, // 11月龄
-          { ageMonth: 12, L: 0.3981, M: 9.112, S: 0.1200 }, // 12月龄
-          { ageMonth: 18, L: 0.5178, M: 10.565, S: 0.1192 },// 18月龄
-          { ageMonth: 24, L: 0.6051, M: 11.848, S: 0.1195 },// 24月龄
-          { ageMonth: 30, L: 0.6703, M: 13.031, S: 0.1205 },// 30月龄
-          { ageMonth: 36, L: 0.7190, M: 14.147, S: 0.1221 } // 36月龄
-        ],
-        height: [
-          { ageMonth: 0, L: 1, M: 49.1, S: 0.0379 },  // 0月龄
-          { ageMonth: 1, L: 1, M: 53.7, S: 0.0364 },  // 1月龄
-          { ageMonth: 2, L: 1, M: 57.1, S: 0.0353 },  // 2月龄
-          { ageMonth: 3, L: 1, M: 59.8, S: 0.0343 },  // 3月龄
-          { ageMonth: 4, L: 1, M: 62.1, S: 0.0336 },  // 4月龄
-          { ageMonth: 5, L: 1, M: 64.0, S: 0.0330 },  // 5月龄
-          { ageMonth: 6, L: 1, M: 65.7, S: 0.0325 },  // 6月龄
-          { ageMonth: 7, L: 1, M: 67.3, S: 0.0321 },  // 7月龄
-          { ageMonth: 8, L: 1, M: 68.7, S: 0.0318 },  // 8月龄
-          { ageMonth: 9, L: 1, M: 70.1, S: 0.0316 },  // 9月龄
-          { ageMonth: 10, L: 1, M: 71.5, S: 0.0315 }, // 10月龄
-          { ageMonth: 11, L: 1, M: 72.8, S: 0.0314 }, // 11月龄
-          { ageMonth: 12, L: 1, M: 74.0, S: 0.0314 }, // 12月龄
-          { ageMonth: 18, L: 1, M: 80.7, S: 0.0317 }, // 18月龄
-          { ageMonth: 24, L: 1, M: 86.4, S: 0.0325 }, // 24月龄
-          { ageMonth: 30, L: 1, M: 91.4, S: 0.0333 }, // 30月龄
-          { ageMonth: 36, L: 1, M: 95.9, S: 0.0343 }  // 36月龄
-        ]
-      }
-    }
+
   },
 
 })
@@ -479,15 +430,29 @@ App({
 
 // 获取聊天历史
 App.prototype.getChatHistory = function (userId) {
-  // 先尝试从本地缓存获取
-  const storageKey = `chat_history_${userId}`;
-  let chatHistory = wx.getStorageSync(storageKey) || null;
+  // 先尝试从 globalData 获取
+  let chatHistory = this.globalData.chatHistory ? this.globalData.chatHistory[userId] : null;
 
-  // 如果本地没有缓存，且网络可用，则从服务器获取
+  // 如果 globalData 中没有，再尝试从本地缓存获取
+  if (!chatHistory) {
+    const storageKey = `chat_history_${userId}`;
+    chatHistory = wx.getStorageSync(storageKey) || null;
+    // 如果从本地缓存获取到了，更新 globalData
+    if (chatHistory) {
+      if (!this.globalData.chatHistory) {
+        this.globalData.chatHistory = {};
+      }
+      this.globalData.chatHistory[userId] = chatHistory;
+    }
+  }
+
+
+  // 如果本地和 globalData 都没有，且网络可用，则从服务器获取
   if (!chatHistory && this.globalData.networkStatus) {
     // 获取用户的 openid
     const openid = wx.getStorageSync('openid');
-    if (openid) {
+    const token = wx.getStorageSync('token'); // 获取 token
+    if (openid && token) {
       // 显示加载提示
       wx.showLoading({
         title: '获取聊天记录...',
@@ -495,21 +460,29 @@ App.prototype.getChatHistory = function (userId) {
 
       // 从服务器获取聊天历史
       wx.request({
-        url: 'https://pinf.top/api/syncData',
-        method: 'GET',
+        url: 'https://pinf.top/api/syncData', // 假设通过统一同步接口获取
+        method: 'GET', // 或者 POST，取决于后端设计
+        header: {
+          'Authorization': `Bearer ${token}` // 使用 token 进行认证
+        },
         data: {
           openid: openid,
-          type: 'chatHistory',
+          type: 'chatHistory', // 告知后端需要获取聊天历史
           userId: userId
         },
         success: (res) => {
           if (res.statusCode === 200 && res.data.success) {
+            // 假设后端返回的聊天历史在 res.data.chatHistory
             chatHistory = res.data.chatHistory || null;
             // 保存到本地缓存
             if (chatHistory) {
+              const storageKey = `chat_history_${userId}`;
               wx.setStorageSync(storageKey, chatHistory);
             }
             // 更新全局变量
+            if (!this.globalData.chatHistory) {
+              this.globalData.chatHistory = {};
+            }
             this.globalData.chatHistory[userId] = chatHistory;
           }
         },
@@ -520,52 +493,68 @@ App.prototype.getChatHistory = function (userId) {
     }
   }
 
-  // 更新全局变量
+  // 更新全局变量 (如果之前没有获取到，这里确保 globalData 中有该 userId 的空对象)
   if (!this.globalData.chatHistory) {
     this.globalData.chatHistory = {};
   }
 
-  // 如果没有聊天历史，创建一个空的
+  // 如果没有聊天历史，创建一个空的并更新 globalData
   if (!chatHistory) {
     chatHistory = {
       userId: userId,
       messageList: [],
       lastUpdateTime: Date.now()
     };
+    this.globalData.chatHistory[userId] = chatHistory;
+  } else {
+    // 如果从本地或服务器获取到了，确保 globalData 是最新的
+    this.globalData.chatHistory[userId] = chatHistory;
   }
 
-  this.globalData.chatHistory[userId] = chatHistory;
+
   return chatHistory;
 };
 
 // 保存聊天消息
 App.prototype.saveChatMessage = function (userId, message) {
-  // 获取当前聊天历史
-  const storageKey = `chat_history_${userId}`;
-  let chatHistory = wx.getStorageSync(storageKey) || {
-    userId: userId,
-    messageList: [],
-    lastUpdateTime: Date.now()
-  };
+  // 获取当前聊天历史，优先从 globalData 获取
+  let chatHistory = this.globalData.chatHistory ? this.globalData.chatHistory[userId] : null;
+
+  // 如果 globalData 中没有，尝试从本地缓存获取
+  if (!chatHistory) {
+    const storageKey = `chat_history_${userId}`;
+    chatHistory = wx.getStorageSync(storageKey) || {
+      userId: userId,
+      messageList: [],
+      lastUpdateTime: Date.now()
+    };
+    // 如果从本地缓存获取到了，更新 globalData
+    if (!this.globalData.chatHistory) {
+      this.globalData.chatHistory = {};
+    }
+    this.globalData.chatHistory[userId] = chatHistory;
+  }
+
 
   // 添加新消息
   chatHistory.messageList.push(message);
   chatHistory.lastUpdateTime = Date.now();
 
   // 保存到本地缓存
+  const storageKey = `chat_history_${userId}`;
   wx.setStorageSync(storageKey, chatHistory);
 
-  // 更新全局变量
-  if (!this.globalData.chatHistory) {
-    this.globalData.chatHistory = {};
-  }
-  this.globalData.chatHistory[userId] = chatHistory;
+  // 更新全局变量 (已在上面处理)
+  // if (!this.globalData.chatHistory) {
+  //   this.globalData.chatHistory = {};
+  // }
+  // this.globalData.chatHistory[userId] = chatHistory;
 
   // 添加到待同步队列
   this.addToSyncQueue({
     type: 'chatHistory',
     userId: userId,
-    data: chatHistory,
+    data: chatHistory, // 传递完整的聊天历史对象
     timestamp: Date.now()
   });
 
@@ -591,7 +580,15 @@ App.prototype.clearChatHistory = function (userId) {
       messageList: [],
       lastUpdateTime: Date.now()
     };
+  } else {
+    this.globalData.chatHistory = {};
+    this.globalData.chatHistory[userId] = {
+      userId: userId,
+      messageList: [],
+      lastUpdateTime: Date.now()
+    };
   }
+
 
   // 添加到待同步队列
   this.addToSyncQueue({

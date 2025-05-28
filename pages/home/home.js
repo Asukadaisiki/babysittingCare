@@ -86,47 +86,66 @@ Page({
 	},
 
 	// 加载儿童信息
+	// 加载儿童信息
 	loadChildInfo: function () {
-		const childInfo = wx.getStorageSync('childInfo') || [];
-
-		if (childInfo.length > 0) {
-			// 获取当前选中的宝宝信息
-			const currentChild = childInfo[this.data.currentChildIndex];
-
-			// 计算实际月龄和矫正月龄
-			const ages = this.calculateAges(currentChild.birthDate, currentChild.expectedDate);
-
-			this.setData({
-				childInfo,
-				hasChild: true,
-				currentChild,
-				actualAgeString: ages.actualAgeString,
-				correctedAgeString: ages.correctedAgeString
-			});
-
-			// 加载生长记录
-			this.loadGrowthRecords(currentChild.name);
-		} else {
-			this.setData({
-				hasChild: false,
-				childInfo: []
-			});
-		}
+	  const childInfo = wx.getStorageSync('childInfo') || [];
+	
+	  if (childInfo.length > 0) {
+	    // 获取当前选中的宝宝信息
+	    const currentChild = childInfo[this.data.currentChildIndex];
+	    
+	    // 计算实际月龄和矫正月龄，传入周龄参数
+	    const ages = this.calculateAges(
+	      currentChild.birthDate, 
+	      currentChild.expectedDate, 
+	      currentChild.gestationalWeeks
+	    );
+	    
+	    this.setData({
+	      childInfo,
+	      hasChild: true,
+	      currentChild,
+	      actualAgeString: ages.actualAgeString,
+	      correctedAgeString: ages.correctedAgeString
+	    });
+	    
+	    // 加载生长记录
+	    this.loadGrowthRecords(currentChild.name);
+	  } else {
+	    this.setData({
+	      hasChild: false,
+	      childInfo: []
+	    });
+	  }
 	},
 
 	// 计算实际月龄和矫正胎龄
-	calculateAges: function (birthDateStr, expectedDateStr) {
+	calculateAges: function (birthDateStr, expectedDateStr, gestationalWeeks) {
 		const birthDate = new Date(birthDateStr);
 		const today = new Date();
-
+	
 		// 计算实际月龄的详细信息
 		const actualAgeString = this.formatAgeString(birthDate, today);
-
+	
 		let correctedAgeString = '';
 		if (expectedDateStr) {
 			const expectedDate = new Date(expectedDateStr);
-			// 矫正思路：宝宝的矫正月龄 = 今天 - 预产期
-			correctedAgeString = this.formatAgeString(expectedDate, today);
+			
+			// 如果有周龄信息，可以更精确地计算矫正月龄
+			// 足月通常为40周，如果早于40周出生，需要进行矫正
+			if (gestationalWeeks && gestationalWeeks < 40) {
+				// 计算需要矫正的周数
+				const weeksToCorrect = 40 - gestationalWeeks;
+				// 将出生日期调整为矫正后的日期（向后推迟相应的周数）
+				const correctedBirthDate = new Date(birthDate);
+				correctedBirthDate.setDate(correctedBirthDate.getDate() + (weeksToCorrect * 7));
+				
+				// 使用矫正后的出生日期计算矫正月龄
+				correctedAgeString = this.formatAgeString(correctedBirthDate, today);
+			} else {
+				// 如果没有周龄信息或已足月，使用预产期计算
+				correctedAgeString = this.formatAgeString(expectedDate, today);
+			}
 		} else {
 			// 如果没有预产期信息，则矫正月龄与实际月龄相同
 			correctedAgeString = actualAgeString;
