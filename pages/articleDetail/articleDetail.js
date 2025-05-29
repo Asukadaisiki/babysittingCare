@@ -48,7 +48,7 @@ Page({
     
     // 无论是否有缓存，都从服务器获取最新数据
     wx.request({
-      url: 'https://pinf.top/api/getArticleDetail',
+      url: 'http://backend.pinf.top:82/api/getArticleDetail',
       method: 'GET',
       data: {
         id: id

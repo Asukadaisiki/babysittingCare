@@ -70,7 +70,7 @@ App({
           if (loginRes.code) {
             // 获取到登录凭证code，发送到开发者服务器
             wx.request({
-              url: 'https://pinf.top/api/login',
+              url: 'http://backend.pinf.top:82/api/login',
               method: 'POST',
               data: {
                 code: loginRes.code
@@ -214,7 +214,7 @@ App({
 
     // 发送同步请求
     wx.request({
-      url: 'https://pinf.top/api/syncData', // 假设后端有一个统一的同步接口
+      url: 'http://backend.pinf.top:82/api/syncData', // 假设后端有一个统一的同步接口
       method: 'POST',
       header: {
         'Authorization': `Bearer ${token}` // 使用 token 进行认证
@@ -322,7 +322,7 @@ App({
 
         // 从服务器获取复诊信息
         wx.request({
-          url: 'https://pinf.top/api/getAppointmentInfo',
+          url: 'http://backend.pinf.top:82/api/getAppointmentInfo',
           method: 'GET',
           header: {
             'Authorization': `Bearer ${token}` // 使用 token 进行认证
@@ -460,7 +460,7 @@ App.prototype.getChatHistory = function (userId) {
 
       // 从服务器获取聊天历史
       wx.request({
-        url: 'https://pinf.top/api/syncData', // 假设通过统一同步接口获取
+        url: 'http://backend.pinf.top:82/api/syncData', // 假设通过统一同步接口获取
         method: 'GET', // 或者 POST，取决于后端设计
         header: {
           'Authorization': `Bearer ${token}` // 使用 token 进行认证

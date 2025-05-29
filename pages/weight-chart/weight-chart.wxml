@@ -1,18 +1,9 @@
-<!-- pages/weight-chart/weight-chart.wxml -->
 <view class="container">
-  <view class="chart-title">体重生长曲线</view>
-  
-  <view class="chart-container">
-    <canvas canvas-id="weight-chart" style="width: 100%; height: 300px; background-color: #fff;"></canvas>
+  <ec-canvas id="mychart-dom-weight" canvas-id="mychart-mychart-dom-weight" ec="{{ ec }}"></ec-canvas>
+  <view class="button-group">
+    <view class="button {{currentGender === 'boy' ? 'active' : ''}}" bindtap="switchToBoyWHO">男孩</view>
+    <view class="button {{currentGender === 'girl' ? 'active' : ''}}" bindtap="switchToGirlWHO">女孩</view>
+    <view class="button {{currentStandard === 'WHO' ? 'active' : ''}}" bindtap="switchToWHO">WHO曲线</view>
+    <view class="button {{currentStandard === 'Fenton' ? 'active' : ''}}" bindtap="switchToFenton">Fenton曲线</view>
   </view>
-  
-  <view class="chart-info">
-    <text>WHO标准体重生长曲线</text>
-    <text wx:if="{{childInfo.name}}">宝宝: {{childInfo.name}}</text>
-  </view>
-
-
-  
-
- 
 </view>

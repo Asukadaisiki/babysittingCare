@@ -523,6 +523,7 @@
 
 .form-item {
   margin-bottom: 30rpx;
+  display: block;
 }
 
 .form-label {

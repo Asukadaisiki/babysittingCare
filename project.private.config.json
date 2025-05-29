@@ -4,6 +4,20 @@
     "miniprogram": {
       "list": [
         {
+          "name": "pages/notifications/notifications",
+          "pathName": "pages/notifications/notifications",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
+          "name": "pages/growth/growth",
+          "pathName": "pages/growth/growth",
+          "query": "",
+          "launchMode": "default",
+          "scene": null
+        },
+        {
           "name": "pages/appointment-setting/appointment-setting",
           "pathName": "pages/appointment-setting/appointment-setting",
           "query": "childId=4",
@@ -85,7 +99,8 @@
   },
   "libVersion": "trial",
   "setting": {
-    "compileHotReLoad": true
+    "compileHotReLoad": true,
+    "urlCheck": false
   },
   "projectname": "babysittingCare"
 }

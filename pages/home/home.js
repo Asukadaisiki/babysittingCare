@@ -13,6 +13,7 @@ Page({
 		currentChildIndex: 0,
 		currentChild: {},
 		childAge: 0,
+		ageTypeIndex: 0,
 		correctedAge: 0, // 矫正胎龄（月）
 		actualAge: 0, // 实际月龄（月）
 		growthRecords: [], // 生长记录数据
@@ -20,6 +21,8 @@ Page({
 			date: '',
 			height: '',
 			weight: '',
+			ageInMonths: '',
+			ageInWeeks: '',
 			headCircumference: ''
 		},
 		showAddForm: false,
@@ -88,49 +91,49 @@ Page({
 	// 加载儿童信息
 	// 加载儿童信息
 	loadChildInfo: function () {
-	  const childInfo = wx.getStorageSync('childInfo') || [];
-	
-	  if (childInfo.length > 0) {
-	    // 获取当前选中的宝宝信息
-	    const currentChild = childInfo[this.data.currentChildIndex];
-	    
-	    // 计算实际月龄和矫正月龄，传入周龄参数
-	    const ages = this.calculateAges(
-	      currentChild.birthDate, 
-	      currentChild.expectedDate, 
-	      currentChild.gestationalWeeks
-	    );
-	    
-	    this.setData({
-	      childInfo,
-	      hasChild: true,
-	      currentChild,
-	      actualAgeString: ages.actualAgeString,
-	      correctedAgeString: ages.correctedAgeString
-	    });
-	    
-	    // 加载生长记录
-	    this.loadGrowthRecords(currentChild.name);
-	  } else {
-	    this.setData({
-	      hasChild: false,
-	      childInfo: []
-	    });
-	  }
+		const childInfo = wx.getStorageSync('childInfo') || [];
+
+		if (childInfo.length > 0) {
+			// 获取当前选中的宝宝信息
+			const currentChild = childInfo[this.data.currentChildIndex];
+
+			// 计算实际月龄和矫正月龄，传入周龄参数
+			const ages = this.calculateAges(
+				currentChild.birthDate,
+				currentChild.expectedDate,
+				currentChild.gestationalWeeks
+			);
+
+			this.setData({
+				childInfo,
+				hasChild: true,
+				currentChild,
+				actualAgeString: ages.actualAgeString,
+				correctedAgeString: ages.correctedAgeString
+			});
+
+			// 加载生长记录
+			this.loadGrowthRecords(currentChild.name);
+		} else {
+			this.setData({
+				hasChild: false,
+				childInfo: []
+			});
+		}
 	},
 
 	// 计算实际月龄和矫正胎龄
 	calculateAges: function (birthDateStr, expectedDateStr, gestationalWeeks) {
 		const birthDate = new Date(birthDateStr);
 		const today = new Date();
-	
+
 		// 计算实际月龄的详细信息
 		const actualAgeString = this.formatAgeString(birthDate, today);
-	
+
 		let correctedAgeString = '';
 		if (expectedDateStr) {
 			const expectedDate = new Date(expectedDateStr);
-			
+
 			// 如果有周龄信息，可以更精确地计算矫正月龄
 			// 足月通常为40周，如果早于40周出生，需要进行矫正
 			if (gestationalWeeks && gestationalWeeks < 40) {
@@ -139,7 +142,7 @@ Page({
 				// 将出生日期调整为矫正后的日期（向后推迟相应的周数）
 				const correctedBirthDate = new Date(birthDate);
 				correctedBirthDate.setDate(correctedBirthDate.getDate() + (weeksToCorrect * 7));
-				
+
 				// 使用矫正后的出生日期计算矫正月龄
 				correctedAgeString = this.formatAgeString(correctedBirthDate, today);
 			} else {
@@ -404,7 +407,34 @@ Page({
 			'newRecord.date': e.detail.value
 		});
 	},
+	onAgeTypeChange: function (e) {
+		const ageTypeIndex = parseInt(e.detail.value); // 转换为数字类型
+		// 清空另一个类型的值
+		const newRecord = this.data.newRecord;
+		if (ageTypeIndex === 0) { // 切换到月龄
+			newRecord.ageInWeeks = '';
+		} else { // 切换到周龄
+			newRecord.ageInMonths = '';
+		}
 
+		this.setData({
+			ageTypeIndex: ageTypeIndex,
+			newRecord: newRecord
+		}, () => {
+			console.log('ageTypeIndex after setData:', this.data.ageTypeIndex);
+			console.log('newRecord after setData:', this.data.newRecord);
+		});
+	},
+
+
+	// 周龄输入事件
+	onAgeInWeeksInput: function (e) {
+		this.setData({
+			'newRecord.ageInWeeks': e.detail.value
+
+		});
+		console.log('ageTypeIndex:')
+	},
 	// 身高输入事件
 	onHeightInput: function (e) {
 		this.setData({
@@ -453,14 +483,22 @@ Page({
 			return;
 		}
 
+
 		// 创建新记录
 		const newRecord = {
 			date: this.data.newRecord.date,
-			ageInMonths: this.data.newRecord.ageInMonths ? parseFloat(this.data.newRecord.ageInMonths) : null,
 			height: this.data.newRecord.height ? parseFloat(this.data.newRecord.height) : null,
 			weight: this.data.newRecord.weight ? parseFloat(this.data.newRecord.weight) : null,
 			headCircumference: this.data.newRecord.headCircumference ? parseFloat(this.data.newRecord.headCircumference) : null
 		};
+		// 根据选择的年龄类型保存对应的值
+		if (this.data.ageTypeIndex === 0) {
+			newRecord.ageInMonths = this.data.newRecord.ageInMonths ? parseFloat(this.data.newRecord.ageInMonths) : null;
+			newRecord.ageInWeeks = null;
+		} else {
+			newRecord.ageInWeeks = this.data.newRecord.ageInWeeks ? parseFloat(this.data.newRecord.ageInWeeks) : null;
+			newRecord.ageInMonths = null;
+		}
 
 		// 添加到记录列表
 		const updatedRecords = [...this.data.growthRecords, newRecord];
@@ -482,10 +520,12 @@ Page({
 			showAddForm: false,
 			newRecord: {
 				date: '',
-				ageInMonths: '',  // 重置月龄字段
+				ageInMonths: '',
+				ageInWeeks: '',
 				height: '',
 				weight: '',
 				headCircumference: ''
+
 			}
 		}, () => {
 			// 重新合并记录
@@ -504,7 +544,6 @@ Page({
 		const records = this.data.growthRecords;
 		const mergedMap = {};
 
-		// 按日期分组
 		records.forEach(record => {
 			if (!mergedMap[record.date]) {
 				mergedMap[record.date] = {};
@@ -523,8 +562,10 @@ Page({
 			if (record.ageInMonths !== null && record.ageInMonths !== undefined) {
 				mergedMap[record.date].ageInMonths = record.ageInMonths;
 			}
+			if (record.ageInWeeks !== null && record.ageInWeeks !== undefined) {
+				mergedMap[record.date].ageInWeeks = record.ageInWeeks;
+			}
 
-			// 保存日期
 			mergedMap[record.date].date = record.date;
 		});
 

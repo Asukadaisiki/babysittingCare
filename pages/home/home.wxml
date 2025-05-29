@@ -112,44 +112,60 @@
 
 
       <!-- 添加记录表单 -->
-      <view class="add-form-mask" wx:if="{{showAddForm}}" bindtap="toggleAddForm"></view>
-      <view class="add-form {{showAddForm ? 'show' : ''}}">
-        <view class="form-header">
-          <text class="form-title">添加生长记录</text>
-          <text class="close-btn" bindtap="toggleAddForm">×</text>
+      <!-- 添加生长记录表单 -->
+      <view class="add-form-container" wx:if="{{showAddForm}}">
+        <view class="add-form {{showAddForm ? 'show' : ''}}">
+          <view class="form-header">
+            <text class="form-title">添加生长记录</text>
+            <text class="close-btn" bindtap="toggleAddForm">×</text>
+          </view>
+
+          <view class="form-item">
+            <text class="form-label">日期</text>
+            <picker mode="date" value="{{newRecord.date}}" bindchange="onDateChange">
+              <view class="picker">{{newRecord.date || '请选择日期'}}</view>
+            </picker>
+          </view>
+
+          <!-- 年龄类型选择 -->
+          <view class="form-item">
+            <text class="form-label">年龄类型</text>
+            <picker bindchange="onAgeTypeChange" value="{{ageTypeIndex}}" range="{{['月龄', '周龄']}}">
+              <view class="picker">{{['月龄', '周龄'][ageTypeIndex]}}</view>
+            </picker>
+          </view>
+
+          <!-- 月龄输入 -->
+          <view class="form-item" wx:if="{{ageTypeIndex === 0}}">
+            <text class="form-label">月龄 (月)</text>
+            <input type="digit" placeholder="请输入月龄" value="{{newRecord.ageInMonths}}" bindinput="onAgeInMonthsInput" />
+          </view>
+
+          <!-- 周龄输入 -->
+          <view class="form-item" wx:if="{{ageTypeIndex === 1}}">
+            <text class="form-label">周龄 (周)</text>
+            <input type="digit" placeholder="请输入周龄" value="{{newRecord.ageInWeeks}}" bindinput="onAgeInWeeksInput" />
+          </view>
+
+          <view class="form-item">
+            <text class="form-label">身高 (cm)</text>
+            <input type="digit" value="{{newRecord.height}}" bindinput="onHeightInput" placeholder="请输入身高" />
+          </view>
+
+          <view class="form-item">
+            <text class="form-label">体重 (kg)</text>
+            <input type="digit" value="{{newRecord.weight}}" bindinput="onWeightInput" placeholder="请输入体重" />
+          </view>
+
+          <view class="form-item">
+            <text class="form-label">头围 (cm)</text>
+            <input type="digit" value="{{newRecord.headCircumference}}" bindinput="onHeadCircumferenceInput" placeholder="请输入头围" />
+          </view>
+
+          <view class="form-tip">请输入准确的生长数据，不需要全部填写</view>
+
+          <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
         </view>
-        
-        <view class="form-item">
-          <text class="form-label">日期</text>
-          <picker mode="date" value="{{newRecord.date}}" bindchange="onDateChange">
-            <view class="picker">{{newRecord.date || '请选择日期'}}</view>
-          </picker>
-        </view>
-        
-        <!-- 添加月龄选项 -->
-        <view class="form-item">
-          <text class="form-label">月龄 (月)</text>
-          <input type="digit" value="{{newRecord.ageInMonths}}" bindinput="onAgeInMonthsInput" placeholder="请输入宝宝月龄" />
-        </view>
-        
-        <view class="form-item">
-          <text class="form-label">身高 (cm)</text>
-          <input type="digit" value="{{newRecord.height}}" bindinput="onHeightInput" placeholder="请输入身高" />
-        </view>
-        
-        <view class="form-item">
-          <text class="form-label">体重 (kg)</text>
-          <input type="digit" value="{{newRecord.weight}}" bindinput="onWeightInput" placeholder="请输入体重" />
-        </view>
-        
-        <view class="form-item">
-          <text class="form-label">头围 (cm)</text>
-          <input type="digit" value="{{newRecord.headCircumference}}" bindinput="onHeadCircumferenceInput" placeholder="请输入头围" />
-        </view>
-        
-        <view class="form-tip">请输入准确的生长数据，不需要全部填写</view>
-        
-        <button class="submit-btn" bindtap="addGrowthRecord">保存记录</button>
       </view>
       
       <!-- 历史记录列表 -->
