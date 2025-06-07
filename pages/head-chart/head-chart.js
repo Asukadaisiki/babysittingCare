@@ -1,24 +1,40 @@
 // pages/head-chart/head-chart.js
 
 const app = getApp();
-import * as echarts from 'echarts';
 
+import * as echarts from '../../ec-canvas/echarts';
+let chart;
 
 Page({
   data: {
     childId: '',
     childInfo: {},
-    myechart:{
-        onInit:initChart
-    },
+    canvasWidth: 0,
+    canvasHeight: 0,
     // 直接初始化示例数据
-    whoStandard: [
-      { age: 0, value: 35, type: 'WHO标准' },
-      { age: 3, value: 40, type: 'WHO标准' },
-      { age: 6, value: 43, type: 'WHO标准' },
-      { age: 9, value: 45, type: 'WHO标准' },
-      { age: 12, value: 47, type: 'WHO标准' }
-    ],
+    ec: {
+      onInit: function (canvas, width, height, dpr) {
+        // 将 initChart 方法移到这里
+        if (!canvas) {
+          console.error('canvas 上下文获取失败');
+          return null;
+        }
+
+        const chart = echarts.init(canvas, null, {
+          width: width,
+          height: height,
+          devicePixelRatio: dpr
+        });
+        canvas.setChart(chart);
+        this.chart = chart;
+
+        // 确保数据已经准备好再初始化图表
+        this.updateChart();
+        return chart;
+      }
+    },
+    currentGender: 'boy',  // 默认显示男孩
+    currentStandard: 'WHO',
     boyHeadCircumferenceDataWho: [
       { age: 0, l: 1, m: 34.4618, s: 0.03686, p3: 32.1, p15: 33.1, p50: 34.5, p85: 35.8, p97: 36.9, type: 'WHO标准' },
       { age: 1, l: 1, m: 37.2759, s: 0.03133, p3: 35.1, p15: 36.1, p50: 37.3, p85: 38.5, p97: 39.5, type: 'WHO标准' },
@@ -82,10 +98,10 @@ Page({
       { age: 59, l: 1, m: 50.6984, s: 0.02943, p3: 47.9, p15: 49.2, p50: 50.7, p85: 52.2, p97: 53.5, type: 'WHO标准' },
       { age: 60, l: 1, m: 50.7375, s: 0.02946, p3: 47.9, p15: 49.2, p50: 50.7, p85: 52.3, p97: 53.5, type: 'WHO标准' }
     ],
-    girlHeadCircumferenceDataWho: [
+    girlHeadCircDataWho: [ // 注意这里的 W 是大写
       { age: 0, l: 1, m: 33.8787, s: 0.03496, p3: 31.7, p15: 32.7, p50: 33.9, p85: 35.1, p97: 36.1, type: 'WHO标准' },
-      { age: 1, l: 1, m: 36.5463, s: 0.0321, p3: 34.3, p15: 35.3, p50: 36.5, p85: 37.8, p97: 38.8, type: 'WHO标准' },
-      { age: 2, l: 1, m: 38.2521, s: 0.03168, p3: 36.0, p15: 37.0, p50: 38.3, p85: 39.5, p97: 40.5, type: 'WHO标准' },
+      { age: 1, l: 1, m: 36.5463, s: 0.03053, p3: 34.4, p15: 35.4, p50: 36.5, p85: 37.7, p97: 38.7, type: 'WHO标准' },
+      { age: 2, l: 1, m: 38.2521, s: 0.02955, p3: 36.1, p15: 37.1, p50: 38.3, p85: 39.5, p97: 40.5, type: 'WHO标准' },
       { age: 3, l: 1, m: 39.5328, s: 0.0314, p3: 37.2, p15: 38.2, p50: 39.5, p85: 40.8, p97: 41.9, type: 'WHO标准' },
       { age: 4, l: 1, m: 40.5817, s: 0.03119, p3: 38.2, p15: 39.3, p50: 40.6, p85: 41.9, p97: 43.0, type: 'WHO标准' },
       { age: 5, l: 1, m: 41.459, s: 0.03102, p3: 39.0, p15: 40.1, p50: 41.5, p85: 42.8, p97: 43.9, type: 'WHO标准' },
@@ -146,28 +162,38 @@ Page({
       { age: 60, l: 1, m: 49.9229, s: 0.0285, p3: 47.2, p15: 48.4, p50: 49.9, p85: 51.4, p97: 52.6, type: 'WHO标准' }
     ],
     boyHeadCircDataFenton: [
-      { age: 22, p3: 20.5, p10: 21.5, p50: 23.5, p90: 25.0, p97: 26.0, type: 'Fenton标准' },
-      { age: 24, p3: 22.5, p10: 23.5, p50: 25.5, p90: 27.0, p97: 28.0, type: 'Fenton标准' },
-      { age: 26, p3: 24.5, p10: 25.5, p50: 27.5, p90: 29.0, p97: 30.0, type: 'Fenton标准' },
-      { age: 28, p3: 26.5, p10: 27.5, p50: 29.5, p90: 31.0, p97: 32.0, type: 'Fenton标准' },
-      { age: 30, p3: 28.5, p10: 29.5, p50: 31.5, p90: 33.0, p97: 34.0, type: 'Fenton标准' },
-      { age: 32, p3: 30.5, p10: 31.5, p50: 33.5, p90: 35.0, p97: 36.0, type: 'Fenton标准' },
-      { age: 34, p3: 32.5, p10: 33.5, p50: 35.5, p90: 37.0, p97: 38.0, type: 'Fenton标准' },
-      { age: 36, p3: 34.0, p10: 35.0, p50: 37.0, p90: 38.5, p97: 39.5, type: 'Fenton标准' },
-      { age: 38, p3: 35.5, p10: 36.5, p50: 38.5, p90: 40.0, p97: 41.0, type: 'Fenton标准' },
-      { age: 40, p3: 36.5, p10: 37.5, p50: 39.5, p90: 41.0, p97: 42.0, type: 'Fenton标准' }
+      { age: 22, p3: 19, p10: 19.8, p50: 21.2, p90: 23, p97: 23.5, type: 'Fenton标准' },
+      { age: 24, p3: 19.5, p10: 20.1, p50: 21.8, p90: 23.3, p97: 24, type: 'Fenton标准' },
+      { age: 26, p3: 21, p10: 22, p50: 23.8, p90: 25.2, p97: 26, type: 'Fenton标准' },
+      { age: 28, p3: 23, p10: 24, p50: 25.5, p90: 27.4, p97: 28, type: 'Fenton标准' },
+      { age: 30, p3: 25, p10: 25.9, p50: 26.8, p90: 29.5, p97: 30.1, type: 'Fenton标准' },
+      { age: 32, p3: 26.8, p10: 27.5, p50: 29.4, p90: 31.1, p97: 32, type: 'Fenton标准' },
+      { age: 34, p3: 28.2, p10: 29, p50: 31, p90: 33, p97: 34, type: 'Fenton标准' },
+      { age: 36, p3: 30, p10: 30.8, p50: 32.8, p90: 34.6, p97: 35.5, type: 'Fenton标准' },
+      { age: 38, p3: 31, p10: 32, p50: 34, p90: 35.8, p97: 36.8, type: 'Fenton标准' },
+      { age: 40, p3: 32.2, p10: 33.1, p50: 35, p90: 37, p97: 37.8, type: 'Fenton标准' },
+      { age: 42, p3: 33.4, p10: 34.2, p50: 36, p90: 37.8, p97: 38.8, type: 'Fenton标准' },
+      { age: 44, p3: 34.5, p10: 35.2, p50: 37, p90: 38.8, p97: 39.9, type: 'Fenton标准' },
+      { age: 46, p3: 35.2, p10: 36.1, p50: 38, p90: 39.8, p97: 40.5, type: 'Fenton标准' },
+      { age: 48, p3: 36.5, p10: 37, p50: 38.8, p90: 40.2, p97: 41, type: 'Fenton标准' },
+      { age: 50, p3: 37, p10: 38, p50: 39.5, p90: 41, p97: 41.8, type: 'Fenton标准' }
     ],
     girlHeadCircDataFenton: [
-      { age: 22, p3: 20.0, p10: 21.0, p50: 23.0, p90: 24.5, p97: 25.5, type: 'Fenton标准' },
-      { age: 24, p3: 22.0, p10: 23.0, p50: 25.0, p90: 26.5, p97: 27.5, type: 'Fenton标准' },
-      { age: 26, p3: 24.0, p10: 25.0, p50: 27.0, p90: 28.5, p97: 29.5, type: 'Fenton标准' },
-      { age: 28, p3: 26.0, p10: 27.0, p50: 29.0, p90: 30.5, p97: 31.5, type: 'Fenton标准' },
-      { age: 30, p3: 28.0, p10: 29.0, p50: 31.0, p90: 32.5, p97: 33.5, type: 'Fenton标准' },
-      { age: 32, p3: 30.0, p10: 31.0, p50: 33.0, p90: 34.5, p97: 35.5, type: 'Fenton标准' },
-      { age: 34, p3: 32.0, p10: 33.0, p50: 35.0, p90: 36.5, p97: 37.5, type: 'Fenton标准' },
-      { age: 36, p3: 33.5, p10: 34.5, p50: 36.5, p90: 38.0, p97: 39.0, type: 'Fenton标准' },
-      { age: 38, p3: 35.0, p10: 36.0, p50: 38.0, p90: 39.5, p97: 40.5, type: 'Fenton标准' },
-      { age: 40, p3: 36.0, p10: 37.0, p50: 39.0, p90: 40.5, p97: 41.5, type: 'Fenton标准' }
+      { age: 22, p3: 18.5, p10: 19.4, p50: 21, p90: 22.2, p97: 23, type: 'Fenton标准' },
+      { age: 24, p3: 19, p10: 20, p50: 21.2, p90: 23, p97: 23.5, type: 'Fenton标准' },
+      { age: 26, p3: 20.5, p10: 21.5, p50: 23, p90: 25, p97: 25.8, type: 'Fenton标准' },
+      { age: 28, p3: 22.5, p10: 23, p50: 25, p90: 27, p97: 28, type: 'Fenton标准' },
+      { age: 30, p3: 24, p10: 25, p50: 27, p90: 28.8, p97: 30, type: 'Fenton标准' },
+      { age: 32, p3: 26, p10: 27, p50: 29, p90: 31, p97: 31.8, type: 'Fenton标准' },
+      { age: 34, p3: 28, p10: 28.8, p50: 30.5, p90: 31.5, p97: 32.5, type: 'Fenton标准' },
+      { age: 36, p3: 29.5, p10: 30.2, p50: 32.1, p90: 34, p97: 35, type: 'Fenton标准' },
+      { age: 38, p3: 31, p10: 32, p50: 33.8, p90: 35.2, p97: 36.3, type: 'Fenton标准' },
+      { age: 40, p3: 32, p10: 33, p50: 34.8, p90: 36.5, p97: 37.2, type: 'Fenton标准' },
+      { age: 42, p3: 33, p10: 34, p50: 35.8, p90: 37.2, p97: 38, type: 'Fenton标准' },
+      { age: 44, p3: 34, p10: 35, p50: 36.5, p90: 38, p97: 39, type: 'Fenton标准' },
+      { age: 46, p3: 35, p10: 35.8, p50: 37.2, p90: 39, p97: 39.8, type: 'Fenton标准' },
+      { age: 48, p3: 35.8, p10: 36.5, p50: 38, p90: 39.6, p97: 40.2, type: 'Fenton标准' },
+      { age: 50, p3: 36.1, p10: 37, p50: 38.8, p90: 40, p97: 41, type: 'Fenton标准' }
     ],
     growthRecords: [], // 生长记录数据
     newRecord: {
@@ -176,20 +202,22 @@ Page({
     },
     showAddForm: false
   },
-
   onLoad: function (options) {
     console.log('头围图表页面加载中...');
+    const systemInfo = wx.getSystemInfoSync();
+    this.setData({
+      canvasWidth: systemInfo.windowWidth,
+      canvasHeight: systemInfo.windowHeight * 0.7
+    });
 
-    // 获取传递的参数
     const childId = options.childId || 'default';
     this.setData({ childId });
 
-    // 获取宝宝信息
+    // Load child info and growth records
     const childInfo = wx.getStorageSync('childInfo') || [];
     let currentChild = {};
 
     if (childId !== 'default') {
-      // 查找对应的宝宝信息
       for (let child of childInfo) {
         if (encodeURIComponent(child.name) === childId) {
           currentChild = child;
@@ -197,15 +225,12 @@ Page({
         }
       }
     } else if (childInfo.length > 0) {
-      // 如果没有指定宝宝，使用第一个宝宝
       currentChild = childInfo[0];
     }
 
-    // 设置今天的日期作为默认录入日期
     const today = new Date();
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-    // 获取生长记录
     let growthRecords = [];
     if (currentChild && currentChild.name) {
       const storageKey = `growthRecords_${currentChild.name}`;
@@ -213,60 +238,306 @@ Page({
     }
 
     this.setData({
+      currentGender: 'boy',
+      currentStandard: 'WHO',
+      childId: childId,
       childInfo: currentChild,
       growthRecords: growthRecords,
       'newRecord.date': dateStr
+    }, () => {
+      if (this.chart) {
+        this.updateChart();
+      }
     });
   },
 
-  onReady: function () {
-    // 添加延时确保页面已完全渲染
-    setTimeout(() => {
-      this.drawSimpleChart();
-    }, 300);
+  onReady() {
+    this.setData({
+      ec: {
+        onInit: this.initChart.bind(this)
+      }
+    });
   },
 
+  initChart(canvas, width, height, dpr) {
+    if (!canvas) {
+      console.error('canvas 上下文获取失败');
+      return null;
+    }
 
-  // 使用canvas绘制简单图表
-  initChart: function (canvas, width, height, dpr) {
     const chart = echarts.init(canvas, null, {
       width: width,
       height: height,
-      devicePixelRatio: dpr // 像素比
+      devicePixelRatio: dpr
     });
-    canvas.setChart(chart);
 
-    var option = {
-      title: {
-        text: 'ECharts 入门示例'
-      },
-      tooltip: {},
-      legend: {
-        data: ['销量']
-      },
-      xAxis: {
-        data: ['衬衫', '羊毛衫', '雪纺衫', '裤子', '高跟鞋', '袜子']
-      },
-      yAxis: {},
-      series: [
-        {
-          name: '销量',
-          type: 'bar',
-          data: [5, 20, 36, 10, 10, 20]
-        }
-      ]
-    }
-    chart.setOption(option);
+    canvas.setChart(chart);
+    this.chart = chart;
+
+    // 立即更新图表数据
+    this.updateChart();
+
     return chart;
   },
 
-  
+  // 添加这个方法
+  switchToBoyWHO() {
+    this.setData({
+      currentGender: 'boy',
+    }, () => {
+      this.updateChart();
+    });
+  },
 
-  // 返回上一页
+  switchToGirlWHO() {
+    this.setData({
+      currentGender: 'girl',
+    }, () => {
+      console.log('切换到女孩WHO曲线');
+      this.updateChart();
+    });
+  },
+  switchToWHO() {
+    // 保持当前性别不变，只切换标准
+    this.setData({
+      currentStandard: 'WHO'
+    }, () => {
+      console.log('切换到WHO曲线');
+
+      this.updateChart();
+    });
+  },
+  // 修改switchToFenton方法
+  switchToFenton() {
+    // 保持当前性别不变，只切换标准
+    this.setData({
+      currentStandard: 'Fenton'
+    }, () => {
+      console.log('切换到Fenton曲线');
+
+      this.updateChart();
+    });
+  },
+
+  updateChart() {
+    // 确保图表实例存在
+    if (!this.chart) {
+      console.error('图表未初始化');
+      return;
+    }
+
+    // 检查必要的数据是否已初始化
+    if (!this.data.currentGender || !this.data.currentStandard) {
+      console.log('等待数据初始化...');
+      return;
+    }
+
+    const { currentGender, currentStandard, growthRecords } = this.data;
+    let chartData;
+    let xAxisLabel = '月龄（月）';
+    const genderPrefix = currentGender === 'boy' ? '男孩' : '女孩';
+
+    if (currentStandard === 'WHO') {
+      chartData = currentGender === 'boy' ? this.data.boyHeadCircumferenceDataWho : this.data.girlHeadCircumferenceDataWho;
+    } else {
+      chartData = currentGender === 'boy' ? this.data.boyHeadCircDataFenton : this.data.girlHeadCircDataFenton;
+      xAxisLabel = '孕周（周）';
+    }
+
+    // 确保数据存在
+    if (!chartData || !Array.isArray(chartData)) {
+      console.error('图表数据未正确初始化');
+      return;
+    }
+
+    // Define legendData and legendSelected before using them
+    let legendData, legendSelected = {};
+    if (currentStandard === 'WHO') {
+      legendData = [`${genderPrefix}P3`, `${genderPrefix}P15`, `${genderPrefix}P50`, `${genderPrefix}P85`, `${genderPrefix}P97`];
+    } else {
+      legendData = [`${genderPrefix}P3`, `${genderPrefix}P10`, `${genderPrefix}P50`, `${genderPrefix}P90`, `${genderPrefix}P97`];
+    }
+    legendData.forEach(name => legendSelected[name] = true);
+    console.log('Current Standard:', currentStandard);
+    console.log('Growth Records before filtering:', growthRecords);
+    // 过滤并格式化用户生长记录数据
+    const userGrowthData = growthRecords
+      .filter(record => {
+        // 确保记录包含头围数据且不为空
+        if (record.headCircumference === undefined || record.headCircumference === null || record.headCircumference === '') {
+          return false;
+        }
+        if (currentStandard === 'WHO') {
+          // WHO标准只使用月龄数据，并且月龄必须大于等于0
+          return record.ageInMonths !== undefined &&
+            record.ageInMonths !== null &&
+            record.ageInMonths >= 0 &&
+            (record.ageInWeeks === undefined || record.ageInWeeks === null); // 确保不是周龄数据
+        } else {
+          // Fenton标准只使用周龄数据，并且周龄必须大于等于22
+          return record.ageInWeeks !== undefined &&
+            record.ageInWeeks !== null &&
+            record.ageInWeeks >= 22 &&
+            (record.ageInMonths === undefined || record.ageInMonths === null); // 确保不是月龄数据
+        }
+      })
+      // 构建 series 数组，包含标准曲线和用户数据
+      .map(record => {
+        const age = currentStandard === 'WHO' ? record.ageInMonths : record.ageInWeeks;
+        const headCircumference = record.headCircumference;
+        return [age, headCircumference];
+      });
+    const series = [
+      {
+        name: `${genderPrefix}P3`, // 动态 series 名称
+        type: 'line',
+        smooth: true,
+        data: chartData.map(item => [item.age, item.p3])
+      },
+      {
+        name: `${genderPrefix}${currentStandard === 'WHO' ? 'P15' : 'P10'}`, // 动态 series 名称
+        type: 'line',
+        smooth: true,
+        data: chartData.map(item => [item.age, currentStandard === 'WHO' ? item.p15 : item.p10])
+      },
+      {
+        name: `${genderPrefix}P50`, // 动态 series 名称
+        type: 'line',
+        smooth: true,
+        data: chartData.map(item => [item.age, item.p50])
+      },
+      {
+        name: `${genderPrefix}${currentStandard === 'WHO' ? 'P85' : 'P90'}`, // 动态 series 名称
+        type: 'line',
+        smooth: true,
+        data: chartData.map(item => [item.age, currentStandard === 'WHO' ? item.p85 : item.p90])
+      },
+      {
+        name: `${genderPrefix}P97`, // 动态 series 名称
+        type: 'line',
+        smooth: true,
+        data: chartData.map(item => [item.age, item.p97])
+      }
+    ];
+
+    // 添加用户数据系列
+    if (userGrowthData.length > 0) {
+      const userSeriesName = '我的数据';
+      legendData.push(userSeriesName);
+      legendSelected[userSeriesName] = true;
+
+      const userSeries = {
+        name: userSeriesName,
+        type: 'line',
+        smooth: true, // 使用散点图表示用户数据点
+        data: userGrowthData,
+        symbolSize: 8,
+        itemStyle: {
+          color: '#FF0000' // 用户数据点颜色，例如红色
+        }
+      };
+      series.push(userSeries); // 将用户数据系列添加到标准曲线系列之后
+    }
+
+    // 声明并配置 option 对象
+    const option = {
+      title: {
+        text: `头围生长曲线（${currentStandard}标准）`, // 动态标题
+        left: 'center',
+        textStyle: {
+          fontSize: 14
+        }
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function (params) {
+          let tooltipContent = '';
+          params.forEach((item, index) => {
+            if (index > 0) {
+              tooltipContent += '\n'; // 每个数据项之前添加换行
+            }
+            if (item.seriesName === '我的数据') {
+              tooltipContent += `${item.seriesName}: ${item.value[1]} cm (年龄: ${item.value[0]}${currentStandard === 'WHO' ? '月' : '周'})`;
+            } else {
+              tooltipContent += `${item.seriesName}: ${item.value[1]} cm (年龄: ${item.value[0]}${currentStandard === 'WHO' ? '月' : '周'})`;
+            }
+          });
+          return tooltipContent;
+        }
+      },
+      legend: {
+        data: legendData, // 使用动态生成的 legend data
+        top: 30,
+        textStyle: {
+          fontSize: 10
+        },
+        selected: legendSelected // 使用动态生成的 selected 状态
+      },
+      grid: {
+        left: '10%',
+        right: '4%',
+        bottom: '10%',
+        top: '25%',
+        containLabel: true
+      },
+      dataZoom: [
+        {
+          type: 'inside', // 内置型数据区域缩放
+          xAxisIndex: [0], // 作用于第一个 xAxis
+          filterMode: 'weakFilter' // 过滤模式
+        },
+        {
+          type: 'inside', // 内置型数据区域缩放
+          yAxisIndex: [0], // 作用于第一个 yAxis
+          filterMode: 'weakFilter' // 过滤模式
+        }
+      ],
+      xAxis: {
+        type: 'value',
+        name: xAxisLabel,
+        min: currentStandard === 'WHO' ? 0 : 22, // <-- **请确保这里根据标准动态设置了最小值**
+        max: currentStandard === 'WHO' ? 60 : 40, // <-- **请确保这里根据标准动态设置了最大值**
+        interval: currentStandard === 'WHO' ? 6 : 2, // <-- **请确保这里根据标准动态设置了间隔**
+        nameTextStyle: {
+          fontSize: 12
+        },
+        axisLabel: {
+          fontSize: 10
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: '头围（cm）',
+        min: currentStandard === 'WHO' ? 30 : 20, // WHO标准最小30，Fenton最小20
+        max: currentStandard === 'WHO' ? 55 : 45, // WHO标准最大55，Fenton最大45
+        interval: currentStandard === 'WHO' ? 5 : 5, // 两个标准间隔都是5
+        nameTextStyle: {
+          fontSize: 12
+        },
+        axisLabel: {
+          fontSize: 10
+        }
+      },
+      series: series // 使用构建好的 series 数组
+    };
+
+    // 使用 this.chart 而不是 chart
+    if (this.chart) {
+     this.chart.setOption(option);
+    }
+  },
+  // ... existing code ...
+
   navigateBack: function () {
     wx.navigateBack();
   }
 });
+
+
+// 返回上一页
+
+
+
 
 
 

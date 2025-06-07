@@ -16,7 +16,8 @@
     "pages/weight-chart/weight-chart",
     "pages/appointment-setting/appointment-setting",
     "pages/videoDetail/videoDetail",
-    "pages/articleDetail/articleDetail"
+    "pages/articleDetail/articleDetail",
+    "pages/growth/growth"
   ],
   "tabBar": {
     "custom": true,

@@ -65,20 +65,20 @@ Page({
   requestAIResponse(question) {
     // 模拟网络请求延迟
     setTimeout(() => {
-      // 这里应该是实际的API请求
-      // wx.request({
-      //   url: 'https://example.com/ai-api',
-      //   method: 'POST',
-      //   data: { question },
-      //   success: (res) => {
-      //     this.handleAIResponse(res.data.answer);
-      //   },
-      //   fail: (err) => {
-      //     this.handleRequestFail(err);
-      //   }
-      // });
+      这里应该是实际的API请求
+      wx.request({
+        url: 'http://8.138.224.38/chatbot/VjC7kNgX9aJq72Qj',
+        method: 'POST',
+        data: { question },
+        success: (res) => {
+          this.handleAIResponse(res.data.answer);
+        },
+        fail: (err) => {
+          this.handleRequestFail(err);
+        }
+      });
 
-      // 模拟成功响应
+      模拟成功响应
       this.handleAIResponse(this.getSimulatedResponse(question));
     }, 1000);
   },
