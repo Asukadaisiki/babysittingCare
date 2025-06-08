@@ -35,6 +35,9 @@ Page({
 
   // 获取文章详情
   fetchArticleDetail: function (id) {
+    // 引入API模块
+    const { API } = require('../../utils/api.js');
+    
     // 先尝试从缓存获取
     const cacheKey = `article_detail_${id}`;
     const cachedData = wx.getStorageSync(cacheKey);
@@ -47,61 +50,26 @@ Page({
     }
     
     // 无论是否有缓存，都从服务器获取最新数据
-    wx.request({
-      url: 'http://backend.pinf.top:82/api/getArticleDetail',
-      method: 'GET',
-      data: {
-        id: id
-      },
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const articleData = res.data.data;
-          
-          // 更新缓存
-          wx.setStorageSync(cacheKey, articleData);
-          wx.setStorageSync(`${cacheKey}_time`, Date.now());
-          
-          // 更新页面数据
-          this.setData({
-            articleInfo: articleData,
-            loading: false
-          });
-          
-          // 添加到同步队列
-          app.addToSyncQueue({
-            type: 'articleView',
-            articleId: id,
-            timestamp: Date.now()
-          });
-        } else {
-          // 如果请求失败但有缓存数据，使用缓存数据
-          if (!this.data.articleInfo) {
-            this.setData({
-              error: true,
-              loading: false
-            });
-            wx.showToast({
-              title: '获取文章信息失败',
-              icon: 'none'
-            });
-          }
-        }
-      },
-      fail: (err) => {
-        console.error('请求文章详情失败:', err);
-        // 如果请求失败但有缓存数据，使用缓存数据
-        if (!this.data.articleInfo) {
-          this.setData({
-            error: true,
-            loading: false
-          });
-          wx.showToast({
-            title: '网络错误，请检查网络连接',
-            icon: 'none'
-          });
-        }
-      }
-    });
+    API.content.getArticleDetail(id)
+      .then(res => {
+        const articleData = res.article;
+        
+        // 更新缓存
+        wx.setStorageSync(cacheKey, articleData);
+        
+        this.setData({
+          articleInfo: articleData,
+          loading: false
+        });
+      })
+      .catch(err => {
+        console.error('获取文章详情失败:', err);
+        wx.showToast({
+          title: err.message || '获取文章详情失败',
+          icon: 'none'
+        });
+        this.setData({ loading: false });
+      });
   },
 
   // 检查并更新缓存

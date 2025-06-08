@@ -70,78 +70,67 @@ Page({
       return;
     }
     
-    // 无论是否有缓存，都从服务器获取最新数据
-    wx.request({
-      url: 'https://pinf.top/api/getOnlineClassData',
-      method: 'GET',
-      data: {
-        openid: openid,
-        token: token
-      },
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          const allVideos = res.data.videoGroups || [];
-          const allArticles = res.data.articleGroups || [];
+    // 引入API模块
+    const { API } = require('../../utils/api.js');
+    
+    // 并行获取视频和文章数据
+    Promise.all([
+      API.content.getVideos({ page: 1, limit: 10 }),
+      API.content.getArticles({ page: 1, limit: 10 })
+    ])
+      .then(([videosRes, articlesRes]) => {
+        const allVideos = videosRes.videos || [];
+        const allArticles = articlesRes.articles || [];
+        
+        // 获取前3个视频和文章
+        const topVideos = this.getTopItems(allVideos, 3);
+        const topArticles = this.getTopItems(allArticles, 3);
+        
+        // 检查数据是否有变化
+        const videosChanged = JSON.stringify(this.data.videoGroups) !== JSON.stringify(topVideos);
+        const articlesChanged = JSON.stringify(this.data.articleGroups) !== JSON.stringify(topArticles);
+        
+        if (videosChanged || articlesChanged) {
+          // 更新缓存（存储所有数据）
+          wx.setStorageSync(videoCacheKey, allVideos);
+          wx.setStorageSync(articleCacheKey, allArticles);
+          wx.setStorageSync(`${videoCacheKey}_time`, Date.now());
+          wx.setStorageSync(`${articleCacheKey}_time`, Date.now());
           
-          // 获取前3个视频和文章
-          const topVideos = this.getTopItems(allVideos, 3);
-          const topArticles = this.getTopItems(allArticles, 3);
+          // 更新页面数据（只显示前3个）
+          this.setData({
+            videoGroups: topVideos,
+            articleGroups: topArticles
+          });
           
-          // 检查数据是否有变化
-          const videosChanged = JSON.stringify(this.data.videoGroups) !== JSON.stringify(topVideos);
-          const articlesChanged = JSON.stringify(this.data.articleGroups) !== JSON.stringify(topArticles);
-          
-          if (videosChanged || articlesChanged) {
-            // 更新缓存（存储所有数据）
-            wx.setStorageSync(videoCacheKey, allVideos);
-            wx.setStorageSync(articleCacheKey, allArticles);
-            wx.setStorageSync(`${videoCacheKey}_time`, Date.now());
-            wx.setStorageSync(`${articleCacheKey}_time`, Date.now());
-            
-            // 更新页面数据（只显示前3个）
-            this.setData({
-              videoGroups: topVideos,
-              articleGroups: topArticles
-            });
-            
-            // 添加到同步队列
-            app.addToSyncQueue({
-              type: 'onlineClassView',
-              data: {
-                timestamp: Date.now()
-              },
+          // 添加到同步队列
+          app.addToSyncQueue({
+            type: 'onlineClassView',
+            data: {
               timestamp: Date.now()
-            });
-            
-            // 尝试同步到服务器
-            app.syncToServer();
-          }
-        } else {
-          // 如果请求失败但有缓存数据，使用缓存数据
-          if (!cachedVideos || !cachedArticles) {
-            wx.showToast({
-              title: res.data.message || '获取数据失败',
-              icon: 'none'
-            });
-          }
+            },
+            timestamp: Date.now()
+          });
+          
+          // 尝试同步到服务器
+          app.syncToServer();
         }
-      },
-      fail: (err) => {
+      })
+      .catch(err => {
         console.error('请求在线科普数据失败:', err);
         // 如果请求失败但有缓存数据，使用缓存数据
         if (!cachedVideos || !cachedArticles) {
           wx.showToast({
-            title: '网络错误，请检查网络连接',
+            title: err.message || '获取数据失败',
             icon: 'none'
           });
         }
-      },
-      complete: () => {
+      })
+      .finally(() => {
         this.setData({
           loading: false
         });
-      }
-    });
+      });
   },
   
   // 获取数组中的前N个元素
@@ -189,42 +178,33 @@ Page({
     
     this.setData({ loading: true });
     
-    // 获取用户的 openid 和 token
-    const openid = wx.getStorageSync('openid');
-    const token = wx.getStorageSync('token');
+    // 引入API模块
+    const { API } = require('../../utils/api.js');
     
-    wx.request({
-      url: 'https://pinf.top/api/searchOnlineContent',
-      method: 'GET',
-      data: {
-        keyword: searchText,
-        openid: openid,
-        token: token
-      },
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          this.setData({
-            videoGroups: this.getTopItems(res.data.videoGroups || [], 3),
-            articleGroups: this.getTopItems(res.data.articleGroups || [], 3),
-            loading: false
-          });
-        } else {
-          wx.showToast({
-            title: res.data.message || '搜索失败',
-            icon: 'none'
-          });
-          this.setData({ loading: false });
-        }
-      },
-      fail: (err) => {
+    // 使用搜索API
+    API.content.searchContent({
+      keyword: searchText,
+      type: 'all' // 搜索所有类型的内容
+    })
+      .then(res => {
+        // 分离视频和文章结果
+        const videos = res.results.filter(item => item.type === 'video');
+        const articles = res.results.filter(item => item.type === 'article');
+        
+        this.setData({
+          videoGroups: this.getTopItems(videos, 3),
+          articleGroups: this.getTopItems(articles, 3),
+          loading: false
+        });
+      })
+      .catch(err => {
         console.error('搜索请求失败:', err);
         wx.showToast({
-          title: '网络错误，请检查网络连接',
+          title: err.message || '搜索失败',
           icon: 'none'
         });
         this.setData({ loading: false });
-      }
-    });
+      });
   },
 
   navigateToVideoDetail: function (e) {

@@ -63,24 +63,25 @@ Page({
    * 请求AI回复
    */
   requestAIResponse(question) {
-    // 模拟网络请求延迟
-    setTimeout(() => {
-      这里应该是实际的API请求
-      wx.request({
-        url: 'http://8.138.224.38/chatbot/VjC7kNgX9aJq72Qj',
-        method: 'POST',
-        data: { question },
-        success: (res) => {
-          this.handleAIResponse(res.data.answer);
-        },
-        fail: (err) => {
-          this.handleRequestFail(err);
-        }
+    // 引入API模块
+    const { API } = require('../../utils/api.js');
+    
+    // 生成消息ID
+    const messageId = Date.now().toString();
+    
+    // 调用后端聊天API
+    API.chat.sendMessage({
+      content: question,
+      messageId: messageId
+    })
+      .then(res => {
+        // 处理AI回复
+        this.handleAIResponse(res.aiMessage.content);
+      })
+      .catch(err => {
+        console.error('AI回复请求失败:', err);
+        this.handleRequestFail(err);
       });
-
-      模拟成功响应
-      this.handleAIResponse(this.getSimulatedResponse(question));
-    }, 1000);
   },
 
   /**

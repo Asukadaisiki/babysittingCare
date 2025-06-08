@@ -12,7 +12,7 @@ Page({
     growthRecords: [], // 生长记录数据
     latestRecord: {}, // 最新的生长记录
     activeChart: 'height', // 当前激活的图表类型：height, weight, head
-    onInitChart: null // F2图表初始化函数
+    onInitChart: null 
   },
 
   onLoad: function(options) {
@@ -137,32 +137,7 @@ Page({
   },
   
   // 初始化图表
-  initChart: function() {
-    this.setData({
-      onInitChart: (F2, config) => {
-        const chart = new F2.Chart(config);
-        
-        // 配置坐标轴
-        chart.axis('date', {
-          label: function label(text, index, total) {
-            return text;
-          }
-        });
-        
-        // 初始化空图表
-        chart.interval().position('date*value');
-        chart.render();
-        
-        // 保存图表实例
-        this.chartInstance = chart;
-        
-        // 更新图表数据
-        this.updateChartData();
-        
-        return chart;
-      }
-    });
-  },
+  // 
   
   // 更新图表数据
   updateChartData: function() {

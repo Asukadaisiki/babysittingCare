@@ -1,6 +1,5 @@
 {
   "usingComponents": {
-    "f2": "@antv/wx-f2"
   },
   "navigationBarTitleText": "早护通 - 首页"
 }

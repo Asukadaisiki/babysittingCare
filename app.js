@@ -59,68 +59,52 @@ App({
   // 用户登录函数
   login() {
     return new Promise((resolve, reject) => {
-      // 显示加载提示
-      wx.showLoading({
-        title: '登录中...',
-      });
-
+      // 引入API模块
+      const { API } = require('./utils/api.js');
+      
       // 调用微信登录接口获取临时登录凭证code
       wx.login({
         success: loginRes => {
           if (loginRes.code) {
-            // 获取到登录凭证code，发送到开发者服务器
-            wx.request({
-              url: 'http://backend.pinf.top:82/api/login',
-              method: 'POST',
-              data: {
-                code: loginRes.code
-              },
-              success: (res) => {
-                wx.hideLoading();
+            // 使用统一的API接口进行登录
+            API.auth.login(loginRes.code)
+              .then(res => {
+                // 登录成功，保存用户信息
+                this.globalData.userInfo = res.userinfo;
+                this.globalData.role = res.role;
 
-                if (res.statusCode === 200 && res.data.success) {
-                  // 登录成功，保存用户信息
-                  this.globalData.userInfo = res.data.userInfo;
-                  this.globalData.role = res.data.role;
-
-                  // 保存openid和session_key到本地存储
-                  if (res.data.openid) {
-                    wx.setStorageSync('openid', res.data.openid);
-                  }
-
-                  if (res.data.session_key) {
-                    wx.setStorageSync('session_key', res.data.session_key);
-                  }
-
-                  // 保存childInfo到本地存储并更新全局变量
-                  // 确保从后端获取的 childInfo 包含 growthRecords 字段
-                  const childInfo = res.data.childInfo || [];
-                  wx.setStorageSync('childInfo', childInfo);
-                  this.globalData.childInfo = childInfo; // 更新全局变量
-
-                  // 保存token到本地存储（如果有）
-                  if (res.data.token) {
-                    wx.setStorageSync('token', res.data.token);
-                  }
-
-                  // 根据是否有childInfo决定导航
-                  // this.checkChildInfoAndNavigate(); // 在then/catch中调用
-
-                  resolve({
-                    userInfo: res.data.userInfo,
-                    childInfo: childInfo
-                  });
-                } else {
-                  // 登录失败
-                  reject(new Error(res.data.message || '登录失败'));
+                // 保存openid和session_key到本地存储
+                if (res.openid) {
+                  wx.setStorageSync('openid', res.openid);
                 }
-              },
-              fail: (err) => {
-                wx.hideLoading();
+
+                if (res.session_key) {
+                  wx.setStorageSync('session_key', res.session_key);
+                }
+
+                // 保存childInfo到本地存储并更新全局变量
+                // 确保从后端获取的 childInfo 包含 growthRecords 字段
+                const childInfo = res.childinfo || [];
+                wx.setStorageSync('childInfo', childInfo);
+                this.globalData.childInfo = childInfo; // 更新全局变量
+
+                // 保存token到本地存储（如果有）
+                if (res.token) {
+                  wx.setStorageSync('token', res.token);
+                }
+
+                // 根据是否有childInfo决定导航
+                // this.checkChildInfoAndNavigate(); // 在then/catch中调用
+
+                resolve({
+                  userInfo: res.userinfo,
+                  childInfo: childInfo
+                });
+              })
+              .catch(err => {
                 console.error('登录请求失败:', err);
-                reject(new Error('网络错误，请检查网络连接'));
-              }
-            });
+                reject(err);
+              });
           } else {
             wx.hideLoading();
             reject(new Error('获取用户登录态失败：' + loginRes.errMsg));
@@ -212,69 +196,58 @@ App({
       return;
     }
 
+    // 引入API模块
+    const { apiRequest } = require('./utils/api.js');
+    
     // 发送同步请求
-    wx.request({
-      url: 'http://backend.pinf.top:82/api/syncData', // 假设后端有一个统一的同步接口
-      method: 'POST',
-      header: {
-        'Authorization': `Bearer ${token}` // 使用 token 进行认证
-      },
-      data: {
-        openid: openid, // 仍然传递 openid，后端可能需要
-        data: queue, // 传递整个待同步队列
-        token: token,
-      },
-      success: (res) => {
-        if (res.statusCode === 200 && res.data.success) {
-          // 同步成功，清空队列
-          this.globalData.pendingSyncData = [];
-          wx.setStorageSync('pendingSyncData', []);
+    apiRequest.post('/syncData', {
+      openid: openid, // 仍然传递 openid，后端可能需要
+      data: queue, // 传递整个待同步队列
+      token: token,
+    }, { needAuth: true })
+      .then(res => {
+        // 同步成功，清空队列
+        this.globalData.pendingSyncData = [];
+        wx.setStorageSync('pendingSyncData', []);
 
-          // 更新最后同步时间
-          this.globalData.lastSyncTime = Date.now();
-          wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
+        // 更新最后同步时间
+        this.globalData.lastSyncTime = Date.now();
+        wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
 
-          console.log('数据同步成功', res.data);
+        console.log('数据同步成功', res);
 
-          // TODO: 根据后端返回的数据，可能需要更新本地的 childInfo, appointmentInfo, chatHistory 等
-          // 例如：如果后端返回了最新的 childInfo，需要更新本地缓存和 globalData
-          if (res.data.latestChildInfo) {
-            this.globalData.childInfo = res.data.latestChildInfo;
-            wx.setStorageSync('childInfo', res.data.latestChildInfo);
-          }
-          // 类似地处理 appointmentInfo 和 chatHistory
-          if (res.data.latestAppointmentInfo) {
-            this.globalData.appointmentInfo = res.data.latestAppointmentInfo;
-            // 需要遍历保存到每个 childId 对应的 storageKey
-            for (const childId in res.data.latestAppointmentInfo) {
-              wx.setStorageSync(`appointment_${childId}`, res.data.latestAppointmentInfo[childId]);
-            }
-          }
-          if (res.data.latestChatHistory) {
-            this.globalData.chatHistory = res.data.latestChatHistory;
-            // 需要遍历保存到每个 userId 对应的 storageKey
-            for (const userId in res.data.latestChatHistory) {
-              wx.setStorageSync(`chat_history_${userId}`, res.data.latestChatHistory[userId]);
-            }
-          }
-
-
-        } else {
-          console.error('数据同步失败', res.data);
-          // TODO: 根据后端返回的错误信息，可能需要处理冲突或重试
+        // TODO: 根据后端返回的数据，可能需要更新本地的 childInfo, appointmentInfo, chatHistory 等
+        // 例如：如果后端返回了最新的 childInfo，需要更新本地缓存和 globalData
+        if (res.latestChildInfo) {
+          this.globalData.childInfo = res.latestChildInfo;
+          wx.setStorageSync('childInfo', res.latestChildInfo);
         }
-      },
-      fail: (err) => {
+        // 类似地处理 appointmentInfo 和 chatHistory
+        if (res.latestAppointmentInfo) {
+          this.globalData.appointmentInfo = res.latestAppointmentInfo;
+          // 需要遍历保存到每个 childId 对应的 storageKey
+          for (const childId in res.latestAppointmentInfo) {
+            wx.setStorageSync(`appointment_${childId}`, res.latestAppointmentInfo[childId]);
+          }
+        }
+        if (res.latestChatHistory) {
+          this.globalData.chatHistory = res.latestChatHistory;
+          // 需要遍历保存到每个 userId 对应的 storageKey
+          for (const userId in res.latestChatHistory) {
+            wx.setStorageSync(`chat_history_${userId}`, res.latestChatHistory[userId]);
+          }
+        }
+      })
+      .catch(err => {
         console.error('同步请求失败:', err);
         // TODO: 处理网络错误，可能需要指数退避重试
-      },
-      complete: () => {
+      })
+      .finally(() => {
         // 重置同步状态
         this.globalData.isDataSyncing = false;
         // 无论成功失败，都尝试再次同步，以处理可能的新增数据或网络恢复
         // setTimeout(() => this.syncToServer(), 5000); // 可以考虑定时重试
-      }
-    });
+      });
   },
 
   // 监听网络状态变化
@@ -320,36 +293,30 @@ App({
           title: '获取复诊信息...',
         });
 
-        // 从服务器获取复诊信息
-        wx.request({
-          url: 'http://backend.pinf.top:82/api/getAppointmentInfo',
-          method: 'GET',
-          header: {
-            'Authorization': `Bearer ${token}` // 使用 token 进行认证
-          },
-          data: {
-            openid: openid,
-            childId: childId
-          },
-          success: (res) => {
-            if (res.statusCode === 200 && res.data.success) {
-              appointmentInfo = res.data.appointmentInfo || null;
-              // 保存到本地缓存
-              if (appointmentInfo) {
-                const storageKey = `appointment_${childId}`;
-                wx.setStorageSync(storageKey, appointmentInfo);
-              }
-              // 更新全局变量
-              if (!this.globalData.appointmentInfo) {
-                this.globalData.appointmentInfo = {};
-              }
-              this.globalData.appointmentInfo[childId] = appointmentInfo;
+        // 引入API模块
+        const { API } = require('./utils/api.js');
+        
+        // 从服务器获取预约信息
+        API.appointment.getAppointments({ childId: childId })
+          .then(res => {
+            appointmentInfo = res.appointments || null;
+            // 保存到本地缓存
+            if (appointmentInfo) {
+              const storageKey = `appointment_${childId}`;
+              wx.setStorageSync(storageKey, appointmentInfo);
             }
-          },
-          complete: () => {
+            // 更新全局变量
+            if (!this.globalData.appointmentInfo) {
+              this.globalData.appointmentInfo = {};
+            }
+            this.globalData.appointmentInfo[childId] = appointmentInfo;
+          })
+          .catch(err => {
+            console.error('获取预约信息失败:', err);
+          })
+          .finally(() => {
             wx.hideLoading();
-          }
-        });
+          });
       }
     }
 
@@ -458,38 +425,30 @@ App.prototype.getChatHistory = function (userId) {
         title: '获取聊天记录...',
       });
 
+      // 引入API模块
+      const { API } = require('./utils/api.js');
+      
       // 从服务器获取聊天历史
-      wx.request({
-        url: 'http://backend.pinf.top:82/api/syncData', // 假设通过统一同步接口获取
-        method: 'GET', // 或者 POST，取决于后端设计
-        header: {
-          'Authorization': `Bearer ${token}` // 使用 token 进行认证
-        },
-        data: {
-          openid: openid,
-          type: 'chatHistory', // 告知后端需要获取聊天历史
-          userId: userId
-        },
-        success: (res) => {
-          if (res.statusCode === 200 && res.data.success) {
-            // 假设后端返回的聊天历史在 res.data.chatHistory
-            chatHistory = res.data.chatHistory || null;
-            // 保存到本地缓存
-            if (chatHistory) {
-              const storageKey = `chat_history_${userId}`;
-              wx.setStorageSync(storageKey, chatHistory);
-            }
-            // 更新全局变量
-            if (!this.globalData.chatHistory) {
-              this.globalData.chatHistory = {};
-            }
-            this.globalData.chatHistory[userId] = chatHistory;
+      API.chat.getChatHistory({ userId: userId })
+        .then(res => {
+          chatHistory = res.messages || null;
+          // 保存到本地缓存
+          if (chatHistory) {
+            const storageKey = `chat_history_${userId}`;
+            wx.setStorageSync(storageKey, chatHistory);
           }
-        },
-        complete: () => {
+          // 更新全局变量
+          if (!this.globalData.chatHistory) {
+            this.globalData.chatHistory = {};
+          }
+          this.globalData.chatHistory[userId] = chatHistory;
+        })
+        .catch(err => {
+          console.error('获取聊天历史失败:', err);
+        })
+        .finally(() => {
           wx.hideLoading();
-        }
-      });
+        });
     }
   }
 

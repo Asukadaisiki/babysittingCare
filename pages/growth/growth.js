@@ -73,7 +73,7 @@ function initChart(canvas, width, height, dpr) {
         type: 'scatter',
         data: [[3, 60]], // 3月，60cm
         symbolSize: 10,
-        itemStyle: { color: '#d32f2f' }
+        itemStyle: { color: '#d32f' }
       }
     ]
   };
