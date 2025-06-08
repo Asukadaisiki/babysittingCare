@@ -62,7 +62,8 @@ Page({
 
 		// 重新加载生长记录数据
 		if (this.data.currentChild && this.data.currentChild.name) {
-			const storageKey = `growthRecords_${this.data.currentChild.name}`;
+			const currentChild = this.data.currentChild;
+			const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
 			const growthRecords = wx.getStorageSync(storageKey) || [];
 
 			this.setData({
@@ -91,7 +92,23 @@ Page({
 	// 加载儿童信息
 	// 加载儿童信息
 	loadChildInfo: function () {
-		const childInfo = wx.getStorageSync('childInfo') || [];
+		let childInfo = wx.getStorageSync('childInfo') || [];
+		
+		// 为现有的儿童信息添加 ID 字段（兼容性处理）
+		let needUpdate = false;
+		childInfo = childInfo.map(child => {
+			if (!child.id) {
+				child.id = Date.now() + Math.floor(Math.random() * 1000);
+				needUpdate = true;
+			}
+			return child;
+		});
+		
+		// 如果有更新，保存回本地存储
+		if (needUpdate) {
+			wx.setStorageSync('childInfo', childInfo);
+			console.log('已为现有儿童信息添加ID字段');
+		}
 
 		if (childInfo.length > 0) {
 			// 获取当前选中的宝宝信息
@@ -113,7 +130,7 @@ Page({
 			});
 
 			// 加载生长记录
-			this.loadGrowthRecords(currentChild.name);
+		this.loadGrowthRecords(currentChild.id, currentChild.name);
 		} else {
 			this.setData({
 				hasChild: false,
@@ -270,7 +287,7 @@ Page({
 
 		// 获取当前选中的宝宝信息
 		const childInfo = this.data.currentChild;
-		const childId = childInfo.name ? encodeURIComponent(childInfo.name) : 'default';
+		const childId = childInfo.id || 'default';
 
 		// 根据标签类型跳转到对应页面
 		switch (tab) {
@@ -311,7 +328,7 @@ Page({
 		});
 
 		// 加载选中宝宝的生长记录
-		this.loadGrowthRecords(currentChild.name);
+		this.loadGrowthRecords(currentChild.id, currentChild.name);
 	},
 
 	// 显示删除宝宝确认对话框
@@ -509,10 +526,11 @@ Page({
 		});
 
 		// 保存到本地存储
-		if (this.data.currentChild && this.data.currentChild.name) {
-			const storageKey = `growthRecords_${this.data.currentChild.name}`;
-			wx.setStorageSync(storageKey, updatedRecords);
-		}
+	if (this.data.currentChild && this.data.currentChild.name) {
+		const currentChild = this.data.currentChild;
+		const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
+		wx.setStorageSync(storageKey, updatedRecords);
+	}
 
 		// 更新页面数据
 		this.setData({
@@ -537,6 +555,70 @@ Page({
 				icon: 'success'
 			});
 		});
+	},
+
+	// 加载生长记录方法
+	loadGrowthRecords: function(childId, childName) {
+		// 向后兼容：如果只传了一个参数，当作 childName 处理
+		if (arguments.length === 1) {
+			childName = childId;
+			childId = null;
+		}
+		
+		if (!childName && !childId) {
+			console.warn('childId和childName都为空，无法加载生长记录');
+			return;
+		}
+
+		// 优先使用 ID，如果没有 ID 则使用姓名（向后兼容）
+		const storageKey = childId ? `growthRecords_${childId}` : `growthRecords_${childName}`;
+		let growthRecords = wx.getStorageSync(storageKey) || [];
+		
+		// 如果使用 ID 没有找到数据，但有姓名，尝试从旧的姓名键迁移数据
+		if (growthRecords.length === 0 && childId && childName) {
+			const oldStorageKey = `growthRecords_${childName}`;
+			const oldGrowthRecords = wx.getStorageSync(oldStorageKey) || [];
+			if (oldGrowthRecords.length > 0) {
+				// 迁移数据到新的 ID 键
+				wx.setStorageSync(storageKey, oldGrowthRecords);
+				// 删除旧的姓名键（可选）
+				// wx.removeStorageSync(oldStorageKey);
+				growthRecords = oldGrowthRecords;
+				console.log('已迁移生长记录数据从姓名键到ID键');
+			}
+		}
+
+		// 更新页面数据
+		this.setData({
+			growthRecords: growthRecords
+		});
+
+		// 合并同一天的记录
+		this.mergeGrowthRecords();
+
+		// 如果有网络连接，尝试从服务器获取最新数据
+		const { API } = require('../../utils/api.js');
+		API.child.getChildInfo()
+			.then(res => {
+				if (res.success && res.childinfo && res.childinfo.length > 0) {
+					// 找到对应的儿童
+					const targetChild = res.childinfo.find(child => child.name === childName);
+					if (targetChild && targetChild.growthRecords) {
+						// 更新本地缓存
+						wx.setStorageSync(storageKey, targetChild.growthRecords);
+						// 更新页面数据
+						this.setData({
+							growthRecords: targetChild.growthRecords
+						});
+						// 重新合并记录
+						this.mergeGrowthRecords();
+					}
+				}
+			})
+			.catch(err => {
+				console.error('从服务器获取生长记录失败:', err);
+				// 网络错误时继续使用本地数据
+			});
 	},
 
 	// 在获取生长记录数据后调用此方法合并同一天的记录
@@ -639,7 +721,7 @@ Page({
 	// 复诊提醒相关方法
 	// 加载复诊提醒信息
 	loadAppointmentInfo: function () {
-		const childId = this.data.currentChild.name || '';
+		const childId = this.data.currentChild.id || '';
 		if (!childId) return;
 
 		// 使用全局方法获取复诊信息
@@ -677,7 +759,7 @@ Page({
 
 	// 导航到复诊提醒设置页面
 	navigateToAppointmentSetting: function () {
-		const childId = this.data.currentChild.name || '';
+		const childId = this.data.currentChild.id || '';
 		if (!childId) {
 			wx.showToast({
 				title: '请先添加宝宝信息',
@@ -687,17 +769,17 @@ Page({
 		}
 
 		wx.navigateTo({
-			url: `/pages/appointment-setting/appointment-setting?childId=${encodeURIComponent(childId)}`
+			url: `/pages/appointment-setting/appointment-setting?childId=${childId}`
 		});
 	},
 
 	// 编辑复诊提醒
 	editAppointment: function () {
-		const childId = this.data.currentChild.name || '';
+		const childId = this.data.currentChild.id || '';
 		if (!childId) return;
 
 		wx.navigateTo({
-			url: `/pages/appointment-setting/appointment-setting?childId=${encodeURIComponent(childId)}&edit=true`
+			url: `/pages/appointment-setting/appointment-setting?childId=${childId}&edit=true`
 		});
 	},
 
@@ -717,7 +799,7 @@ Page({
 
 	// 删除复诊提醒
 	deleteAppointment: function () {
-		const childId = this.data.currentChild.name || '';
+		const childId = this.data.currentChild.id || '';
 		if (!childId) return;
 
 		// 删除本地存储的复诊信息
@@ -742,7 +824,7 @@ Page({
 	// 请求订阅消息
 	requestSubscription: function () {
 		const that = this;
-		const childId = this.data.currentChild.name || '';
+		const childId = this.data.currentChild.id || '';
 		if (!childId) return;
 
 		// 请求订阅消息权限

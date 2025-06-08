@@ -153,6 +153,7 @@ Page({
 
     // 保存信息到本地存储
     const childrenInfo = children.map(child => ({
+      id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一的数字ID
       name: child.childName,
       expectedDate: child.expectedDate,
       birthDate: child.birthDate,

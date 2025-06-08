@@ -75,8 +75,13 @@ Page({
       messageId: messageId
     })
       .then(res => {
-        // 处理AI回复
-        this.handleAIResponse(res.aiMessage.content);
+        if (res.success && res.aiMessage) {
+          // 处理AI回复
+          this.handleAIResponse(res.aiMessage.content);
+        } else {
+          console.error('AI回复格式错误:', res);
+          this.handleRequestFail(new Error('AI回复格式错误'));
+        }
       })
       .catch(err => {
         console.error('AI回复请求失败:', err);

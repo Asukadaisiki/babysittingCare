@@ -225,7 +225,7 @@ Page({
 
     if (childId !== 'default') {
       for (let child of childInfo) {
-        if (encodeURIComponent(child.name) === childId) {
+        if (child.id && child.id.toString() === childId) {
           currentChild = child;
           break;
         }
@@ -238,9 +238,20 @@ Page({
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
     let growthRecords = [];
-    if (currentChild && currentChild.name) {
-      const storageKey = `growthRecords_${currentChild.name}`;
+    if (currentChild && (currentChild.id || currentChild.name)) {
+      const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;;
       growthRecords = wx.getStorageSync(storageKey) || [];
+      
+      // 数据迁移：如果使用ID作为键但没有数据，尝试从旧的姓名键加载
+      if (growthRecords.length === 0 && currentChild.id && currentChild.name) {
+        const oldStorageKey = `growthRecords_${currentChild.name}`;
+        const oldGrowthRecords = wx.getStorageSync(oldStorageKey) || [];
+        if (oldGrowthRecords.length > 0) {
+          wx.setStorageSync(storageKey, oldGrowthRecords);
+          wx.removeStorageSync(oldStorageKey);
+          growthRecords = oldGrowthRecords;
+        }
+      }
     }
 
     this.setData({

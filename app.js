@@ -177,79 +177,140 @@ App({
     if (this.globalData.isDataSyncing || !this.globalData.networkStatus) {
       return;
     }
-
+  
     // 获取待同步队列
     const queue = this.globalData.pendingSyncData || [];
     if (queue.length === 0) {
       return;
     }
-
+  
     // 设置同步状态
     this.globalData.isDataSyncing = true;
-
-    // 获取用户的 openid 和 token
-    const openid = wx.getStorageSync('openid');
+  
+    // 获取用户的 token
     const token = wx.getStorageSync('token');
-
-    if (!openid || !token) {
+    if (!token) {
       this.globalData.isDataSyncing = false;
       return;
     }
-
+  
     // 引入API模块
-    const { apiRequest } = require('./utils/api.js');
+    const { API } = require('./utils/api.js');
     
-    // 发送同步请求
-    apiRequest.post('/syncData', {
-      openid: openid, // 仍然传递 openid，后端可能需要
-      data: queue, // 传递整个待同步队列
-      token: token,
-    }, { needAuth: true })
-      .then(res => {
-        // 同步成功，清空队列
-        this.globalData.pendingSyncData = [];
-        wx.setStorageSync('pendingSyncData', []);
-
-        // 更新最后同步时间
-        this.globalData.lastSyncTime = Date.now();
-        wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
-
-        console.log('数据同步成功', res);
-
-        // TODO: 根据后端返回的数据，可能需要更新本地的 childInfo, appointmentInfo, chatHistory 等
-        // 例如：如果后端返回了最新的 childInfo，需要更新本地缓存和 globalData
-        if (res.latestChildInfo) {
-          this.globalData.childInfo = res.latestChildInfo;
-          wx.setStorageSync('childInfo', res.latestChildInfo);
-        }
-        // 类似地处理 appointmentInfo 和 chatHistory
-        if (res.latestAppointmentInfo) {
-          this.globalData.appointmentInfo = res.latestAppointmentInfo;
-          // 需要遍历保存到每个 childId 对应的 storageKey
-          for (const childId in res.latestAppointmentInfo) {
-            wx.setStorageSync(`appointment_${childId}`, res.latestAppointmentInfo[childId]);
+    // 处理队列中的每个项目
+    const syncPromises = [];
+    
+    queue.forEach(item => {
+      switch(item.type) {
+        case 'childInfo':
+          // 使用现有的儿童信息相关API
+          if (item.data && Array.isArray(item.data)) {
+            item.data.forEach(child => {
+              if (child.id) {
+                // 如果有生长记录，逐个添加
+                if (child.growthRecords && child.growthRecords.length > 0) {
+                  child.growthRecords.forEach(record => {
+                    syncPromises.push(
+                      API.child.addGrowthRecord({
+                        childId: child.id,
+                        date: record.date,
+                        ageInMonths: record.ageInMonths,
+                        ageInWeeks: record.ageInWeeks,
+                        height: record.height,
+                        weight: record.weight,
+                        headCircumference: record.headCircumference
+                      })
+                    );
+                  });
+                }
+              } else {
+                // 新增儿童
+                syncPromises.push(
+                  API.child.addChild({
+                    name: child.name,
+                    birthDate: child.birthDate,
+                    gender: child.gender,
+                    gestationalAge: child.gestationalAge
+                  })
+                );
+              }
+            });
           }
-        }
-        if (res.latestChatHistory) {
-          this.globalData.chatHistory = res.latestChatHistory;
-          // 需要遍历保存到每个 userId 对应的 storageKey
-          for (const userId in res.latestChatHistory) {
-            wx.setStorageSync(`chat_history_${userId}`, res.latestChatHistory[userId]);
+          break;
+          
+        case 'appointmentInfo':
+          // 使用预约API
+          if (item.data && item.childId) {
+            // 确保childId是数字类型
+            const childId = parseInt(item.childId);
+            if (isNaN(childId)) {
+              console.error('childId不是有效的数字:', item.childId);
+              break;
+            }
+            
+            syncPromises.push(
+              API.appointment.addAppointment({
+                childId: childId,
+                hospitalName: item.data.hospitalName || '',
+                department: item.data.department || '',
+                appointmentDate: item.data.appointmentDate || '',
+                reminderDays: parseInt(item.data.reminderDays) || 1,
+                notes: item.data.notes || ''
+              })
+            );
           }
+          break;
+          
+        case 'chatHistory':
+          // 聊天历史通过sendMessage API已经自动同步，这里可以跳过
+          // 或者可以实现批量同步逻辑
+          break;
+          
+        case 'deleteAppointmentInfo':
+          // 如果后端有删除预约的API，在这里调用
+          // 目前API文档中没有删除接口，可能需要后端添加
+          break;
+          
+        case 'onlineClassView':
+          // 浏览记录可能不需要同步到服务器，或者可以忽略
+          break;
+      }
+    });
+    
+    // 执行所有同步操作
+    Promise.allSettled(syncPromises)
+      .then(results => {
+        // 检查结果，只移除成功同步的项目
+        const successfulIndices = [];
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            successfulIndices.push(index);
+          } else {
+            console.error('同步失败:', result.reason);
+          }
+        });
+        
+        // 移除成功同步的项目
+        if (successfulIndices.length > 0) {
+          const newQueue = queue.filter((item, index) => !successfulIndices.includes(index));
+          this.globalData.pendingSyncData = newQueue;
+          wx.setStorageSync('pendingSyncData', newQueue);
+          
+          // 更新最后同步时间
+          this.globalData.lastSyncTime = Date.now();
+          wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
+          
+          console.log('数据同步完成，成功:', successfulIndices.length, '失败:', results.length - successfulIndices.length);
         }
       })
       .catch(err => {
-        console.error('同步请求失败:', err);
-        // TODO: 处理网络错误，可能需要指数退避重试
+        console.error('同步过程出错:', err);
       })
       .finally(() => {
         // 重置同步状态
         this.globalData.isDataSyncing = false;
-        // 无论成功失败，都尝试再次同步，以处理可能的新增数据或网络恢复
-        // setTimeout(() => this.syncToServer(), 5000); // 可以考虑定时重试
       });
   },
-
   // 监听网络状态变化
   listenNetworkStatus() {
     wx.onNetworkStatusChange((res) => {
@@ -429,19 +490,24 @@ App.prototype.getChatHistory = function (userId) {
       const { API } = require('./utils/api.js');
       
       // 从服务器获取聊天历史
-      API.chat.getChatHistory({ userId: userId })
+      API.chat.getChatHistory()
         .then(res => {
-          chatHistory = res.messages || null;
-          // 保存到本地缓存
-          if (chatHistory) {
+          if (res.success && res.messages) {
+            // 构造聊天历史对象
+            chatHistory = {
+              userId: userId,
+              messageList: res.messages,
+              lastUpdateTime: Date.now()
+            };
+            // 保存到本地缓存
             const storageKey = `chat_history_${userId}`;
             wx.setStorageSync(storageKey, chatHistory);
+            // 更新全局变量
+            if (!this.globalData.chatHistory) {
+              this.globalData.chatHistory = {};
+            }
+            this.globalData.chatHistory[userId] = chatHistory;
           }
-          // 更新全局变量
-          if (!this.globalData.chatHistory) {
-            this.globalData.chatHistory = {};
-          }
-          this.globalData.chatHistory[userId] = chatHistory;
         })
         .catch(err => {
           console.error('获取聊天历史失败:', err);
@@ -548,18 +614,20 @@ App.prototype.clearChatHistory = function (userId) {
     };
   }
 
-
-  // 添加到待同步队列
-  this.addToSyncQueue({
-    type: 'deleteChatHistory',
-    userId: userId,
-    timestamp: Date.now()
-  });
-
-  // 尝试同步到服务器
-  this.syncToServer();
+  // 调用后端API清空聊天历史
+  const { API } = require('./utils/api.js');
+  API.chat.clearChatHistory()
+    .then(res => {
+      if (res.success) {
+        console.log('服务器聊天历史已清空');
+      }
+    })
+    .catch(err => {
+      console.error('清空服务器聊天历史失败:', err);
+    });
 
   return {
-    success: true
+    success: true,
+    message: '聊天历史已清空'
   };
 };

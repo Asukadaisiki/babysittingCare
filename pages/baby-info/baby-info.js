@@ -57,9 +57,21 @@ Page({
 
   // 加载生长记录
   loadGrowthRecords: function() {
-    if (this.data.currentChild && this.data.currentChild.name) {
-      const storageKey = `growthRecords_${this.data.currentChild.name}`;
-      const growthRecords = wx.getStorageSync(storageKey) || [];
+    if (this.data.currentChild && (this.data.currentChild.id || this.data.currentChild.name)) {
+      const currentChild = this.data.currentChild;
+      const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
+      let growthRecords = wx.getStorageSync(storageKey) || [];
+      
+      // 数据迁移：如果使用ID作为键但没有数据，尝试从旧的姓名键加载
+      if (growthRecords.length === 0 && currentChild.id && currentChild.name) {
+        const oldStorageKey = `growthRecords_${currentChild.name}`;
+        const oldGrowthRecords = wx.getStorageSync(oldStorageKey) || [];
+        if (oldGrowthRecords.length > 0) {
+          wx.setStorageSync(storageKey, oldGrowthRecords);
+          wx.removeStorageSync(oldStorageKey);
+          growthRecords = oldGrowthRecords;
+        }
+      }
       
       // 按日期排序，最新的记录在前
       growthRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -74,6 +86,45 @@ Page({
       
       // 更新图表数据
       this.updateChartData();
+
+      // 如果有网络连接，尝试从服务器获取最新数据
+      const { API } = require('../../utils/api.js');
+      API.child.getChildInfo()
+        .then(res => {
+          if (res.success && res.childinfo && res.childinfo.length > 0) {
+            // 找到对应的儿童
+            const currentChild = this.data.currentChild;
+            const targetChild = res.childinfo.find(child => 
+              (currentChild.id && child.id === currentChild.id) || 
+              (child.name === currentChild.name)
+            );
+            if (targetChild && targetChild.growthRecords) {
+              // 更新本地缓存
+              const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
+              wx.setStorageSync(storageKey, targetChild.growthRecords);
+              
+              // 按日期排序，最新的记录在前
+              const serverGrowthRecords = [...targetChild.growthRecords];
+              serverGrowthRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+              
+              // 获取最新的记录
+              const serverLatestRecord = serverGrowthRecords.length > 0 ? serverGrowthRecords[0] : {};
+              
+              // 更新页面数据
+              this.setData({
+                growthRecords: serverGrowthRecords,
+                latestRecord: serverLatestRecord
+              });
+              
+              // 重新更新图表数据
+              this.updateChartData();
+            }
+          }
+        })
+        .catch(err => {
+          console.error('从服务器获取生长记录失败:', err);
+          // 网络错误时继续使用本地数据
+        });
     }
   },
 
