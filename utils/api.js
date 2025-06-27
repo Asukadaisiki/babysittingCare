@@ -31,6 +31,7 @@ const API_CONFIG = {
 const apiRequest = {
   // 通用请求方法
   request(options) {
+    
     return new Promise((resolve, reject) => {
       const {
         url,
@@ -44,7 +45,11 @@ const apiRequest = {
       if (showLoading) {
         wx.showLoading({ title: loadingText });
       }
-      
+      // 在apiRequest.request方法中添加
+      console.log('请求URL:', API_CONFIG.getApiUrl(url));
+      console.log('请求方法:', method);
+      console.log('请求数据:', JSON.stringify(data));
+      console.log('请求头:', API_CONFIG.getHeaders(needAuth));
       wx.request({
         url: API_CONFIG.getApiUrl(url),
         method,
