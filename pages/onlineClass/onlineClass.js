@@ -75,8 +75,8 @@ Page({
     
     // 并行获取视频和文章数据
     Promise.all([
-      API.content.getVideos({ page: 1, limit: 10 }),
-      API.content.getArticles({ page: 1, limit: 10 })
+      API.content.getVideos({ page: 1, per_page: 10 }),
+      API.content.getArticles({ page: 1, per_page: 10 })
     ])
       .then(([videosRes, articlesRes]) => {
         const allVideos = videosRes.videos || [];
@@ -184,12 +184,14 @@ Page({
     // 使用搜索API
     API.content.searchContent({
       keyword: searchText,
-      type: 'all' // 搜索所有类型的内容
+      type: 'all', // 搜索所有类型的内容
+      page: 1,
+      per_page: 10
     })
       .then(res => {
-        // 分离视频和文章结果
-        const videos = res.results.filter(item => item.type === 'video');
-        const articles = res.results.filter(item => item.type === 'article');
+        // 根据API文档，搜索接口返回videos和articles字段
+        const videos = res.videos || [];
+        const articles = res.articles || [];
         
         this.setData({
           videoGroups: this.getTopItems(videos, 3),
@@ -221,4 +223,3 @@ Page({
     });
   }
 })
-  

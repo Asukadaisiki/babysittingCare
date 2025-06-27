@@ -151,29 +151,53 @@ Page({
       }
     }
 
-    // 保存信息到本地存储
+    // 显示加载提示
+    wx.showLoading({
+      title: '保存中...'
+    });
+
+    // 引入API模块
+    const { API } = require('../../utils/api.js');
+    
+    // 保存信息到本地存储（本地优先）
     const childrenInfo = children.map(child => ({
-      id: Date.now() + Math.floor(Math.random() * 1000), // 生成唯一的数字ID
       name: child.childName,
-      expectedDate: child.expectedDate,
       birthDate: child.birthDate,
-      gestationalWeeks: parseInt(child.gestationalWeeks), // 保存为数字类型
-      gender: child.gender
-    }))
+      gender: child.gender,
+      gestationalAge: parseInt(child.gestationalWeeks), // API文档中使用gestationalAge字段
+      growthRecords: [] // 初始化生长记录数组
+    }));
 
     // 获取现有的儿童信息
-    const existingChildInfo = wx.getStorageSync('childInfo') || []
+    const existingChildInfo = wx.getStorageSync('childInfo') || [];
     
     // 合并现有的和新的儿童信息
-    const updatedChildInfo = [...existingChildInfo, ...childrenInfo]
+    const updatedChildInfo = [...existingChildInfo, ...childrenInfo];
     
-    // 保存更新后的儿童信息
-    wx.setStorageSync('childInfo', updatedChildInfo)
-    console.log('儿童信息已保存:', updatedChildInfo)
+    // 先保存到本地存储
+    wx.setStorageSync('childInfo', updatedChildInfo);
     
-    // 跳转到首页
-    wx.switchTab({
-      url: '/pages/home/home'
-    })
+    // 使用全局方法保存儿童信息（会自动同步到服务器）
+    const app = getApp();
+    app.saveChildInfo(updatedChildInfo);
+    
+    console.log('儿童信息已保存:', updatedChildInfo);
+    
+    wx.hideLoading();
+    
+    // 显示成功提示
+    wx.showToast({
+      title: '保存成功',
+      icon: 'success',
+      duration: 1500,
+      success: () => {
+        // 延迟跳转，让用户看到成功提示
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/home/home'
+          });
+        }, 1500);
+      }
+    });
   }
 })

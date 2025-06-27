@@ -211,7 +211,9 @@ Page({
 
     // 获取聊天历史
     if (userId) {
-      const chatHistory = app.getChatHistory(userId);
+      // 从本地存储获取聊天历史
+      const storageKey = `chat_history_${userId}`;
+      const chatHistory = wx.getStorageSync(storageKey);
       if (chatHistory && chatHistory.messageList) {
         this.setData({
           messageList: chatHistory.messageList

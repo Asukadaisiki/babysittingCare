@@ -248,12 +248,18 @@ App({
               break;
             }
             
+            // 验证必需字段
+            if (!item.data.hospitalName || !item.data.department || !item.data.appointmentDate) {
+              console.error('预约信息缺少必需字段:', item.data);
+              break;
+            }
+            
             syncPromises.push(
               API.appointment.addAppointment({
                 childId: childId,
-                hospitalName: item.data.hospitalName || '',
-                department: item.data.department || '',
-                appointmentDate: item.data.appointmentDate || '',
+                hospitalName: item.data.hospitalName,
+                department: item.data.department,
+                appointmentDate: item.data.appointmentDate,
                 reminderDays: parseInt(item.data.reminderDays) || 1,
                 notes: item.data.notes || ''
               })
@@ -457,88 +463,88 @@ App({
 // 添加以下方法到App对象中
 
 // 获取聊天历史
-App.prototype.getChatHistory = function (userId) {
-  // 先尝试从 globalData 获取
-  let chatHistory = this.globalData.chatHistory ? this.globalData.chatHistory[userId] : null;
+// App.prototype.getChatHistory = function (userId) {
+//   // 先尝试从 globalData 获取
+//   let chatHistory = this.globalData.chatHistory ? this.globalData.chatHistory[userId] : null;
 
-  // 如果 globalData 中没有，再尝试从本地缓存获取
-  if (!chatHistory) {
-    const storageKey = `chat_history_${userId}`;
-    chatHistory = wx.getStorageSync(storageKey) || null;
-    // 如果从本地缓存获取到了，更新 globalData
-    if (chatHistory) {
-      if (!this.globalData.chatHistory) {
-        this.globalData.chatHistory = {};
-      }
-      this.globalData.chatHistory[userId] = chatHistory;
-    }
-  }
+//   // 如果 globalData 中没有，再尝试从本地缓存获取
+//   if (!chatHistory) {
+//     const storageKey = `chat_history_${userId}`;
+//     chatHistory = wx.getStorageSync(storageKey) || null;
+//     // 如果从本地缓存获取到了，更新 globalData
+//     if (chatHistory) {
+//       if (!this.globalData.chatHistory) {
+//         this.globalData.chatHistory = {};
+//       }
+//       this.globalData.chatHistory[userId] = chatHistory;
+//     }
+//   }
 
 
-  // 如果本地和 globalData 都没有，且网络可用，则从服务器获取
-  if (!chatHistory && this.globalData.networkStatus) {
-    // 获取用户的 openid
-    const openid = wx.getStorageSync('openid');
-    const token = wx.getStorageSync('token'); // 获取 token
-    if (openid && token) {
-      // 显示加载提示
-      wx.showLoading({
-        title: '获取聊天记录...',
-      });
+//   // 如果本地和 globalData 都没有，且网络可用，则从服务器获取
+//   if (!chatHistory && this.globalData.networkStatus) {
+//     // 获取用户的 openid
+//     const openid = wx.getStorageSync('openid');
+//     const token = wx.getStorageSync('token'); // 获取 token
+//     if (openid && token) {
+//       // 显示加载提示
+//       wx.showLoading({
+//         title: '获取聊天记录...',
+//       });
 
-      // 引入API模块
-      const { API } = require('./utils/api.js');
+//       // 引入API模块
+//       const { API } = require('./utils/api.js');
       
-      // 从服务器获取聊天历史
-      API.chat.getChatHistory()
-        .then(res => {
-          if (res.success && res.messages) {
-            // 构造聊天历史对象
-            chatHistory = {
-              userId: userId,
-              messageList: res.messages,
-              lastUpdateTime: Date.now()
-            };
-            // 保存到本地缓存
-            const storageKey = `chat_history_${userId}`;
-            wx.setStorageSync(storageKey, chatHistory);
-            // 更新全局变量
-            if (!this.globalData.chatHistory) {
-              this.globalData.chatHistory = {};
-            }
-            this.globalData.chatHistory[userId] = chatHistory;
-          }
-        })
-        .catch(err => {
-          console.error('获取聊天历史失败:', err);
-        })
-        .finally(() => {
-          wx.hideLoading();
-        });
-    }
-  }
+//       // 从服务器获取聊天历史
+//       API.chat.getChatHistory()
+//         .then(res => {
+//           if (res.success && res.messages) {
+//             // 构造聊天历史对象
+//             chatHistory = {
+//               userId: userId,
+//               messageList: res.messages,
+//               lastUpdateTime: Date.now()
+//             };
+//             // 保存到本地缓存
+//             const storageKey = `chat_history_${userId}`;
+//             wx.setStorageSync(storageKey, chatHistory);
+//             // 更新全局变量
+//             if (!this.globalData.chatHistory) {
+//               this.globalData.chatHistory = {};
+//             }
+//             this.globalData.chatHistory[userId] = chatHistory;
+//           }
+//         })
+//         .catch(err => {
+//           console.error('获取聊天历史失败:', err);
+//         })
+//         .finally(() => {
+//           wx.hideLoading();
+//         });
+//     }
+//   }
 
-  // 更新全局变量 (如果之前没有获取到，这里确保 globalData 中有该 userId 的空对象)
-  if (!this.globalData.chatHistory) {
-    this.globalData.chatHistory = {};
-  }
+//   // 更新全局变量 (如果之前没有获取到，这里确保 globalData 中有该 userId 的空对象)
+//   if (!this.globalData.chatHistory) {
+//     this.globalData.chatHistory = {};
+//   }
 
-  // 如果没有聊天历史，创建一个空的并更新 globalData
-  if (!chatHistory) {
-    chatHistory = {
-      userId: userId,
-      messageList: [],
-      lastUpdateTime: Date.now()
-    };
-    this.globalData.chatHistory[userId] = chatHistory;
-  } else {
-    // 如果从本地或服务器获取到了，确保 globalData 是最新的
-    this.globalData.chatHistory[userId] = chatHistory;
-  }
+//   // 如果没有聊天历史，创建一个空的并更新 globalData
+//   if (!chatHistory) {
+//     chatHistory = {
+//       userId: userId,
+//       messageList: [],
+//       lastUpdateTime: Date.now()
+//     };
+//     this.globalData.chatHistory[userId] = chatHistory;
+//   } else {
+//     // 如果从本地或服务器获取到了，确保 globalData 是最新的
+//     this.globalData.chatHistory[userId] = chatHistory;
+//   }
 
 
-  return chatHistory;
-};
+//   return chatHistory;
+// };
 
 // 保存聊天消息
 App.prototype.saveChatMessage = function (userId, message) {

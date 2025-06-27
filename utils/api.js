@@ -13,7 +13,7 @@ const API_CONFIG = {
   // 获取请求头
   getHeaders(includeAuth = true) {
     const headers = {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     };
     
     if (includeAuth) {
@@ -88,10 +88,14 @@ const apiRequest = {
   
   // GET请求
   get(url, data = {}, options = {}) {
+    // GET请求应该将参数放在URL中，而不是body中
+    const queryString = Object.keys(data).length > 0 ? 
+      '?' + Object.keys(data).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`).join('&') : '';
+    
     return this.request({
-      url,
+      url: url + queryString,
       method: 'GET',
-      data,
+      data: {}, // GET请求不应该有body
       ...options
     });
   },
@@ -209,9 +213,9 @@ const API = {
     },
     
     // 获取聊天历史
-    getChatHistory(params = {}) {
-      return apiRequest.get('/getChatHistory', params);
-    },
+    // getChatHistory(params = {}) {
+    //   return apiRequest.get('/getChatHistory', params);
+    // },
     
     // 清空聊天历史
     clearChatHistory() {
