@@ -203,67 +203,33 @@
   <!-- 复诊提醒区域 -->
   <view class="appointment-section" style="width: 654rpx; display: block; box-sizing: border-box; margin-bottom: 20rpx;">
     <view class="section-title">复诊提醒</view>
-    
-    <!-- 无复诊提醒时显示 -->
-    <view class="no-appointment-tip" wx:if="{{!hasAppointment}}">
-      <view class="tip-icon appointment-icon"></view>
-      <view class="tip-text">暂无复诊提醒</view>
-      <button class="add-appointment-btn" bindtap="navigateToAppointmentSetting">设置提醒</button>
+    <button class="add-appointment-btn" bindtap="navigateToAppointmentSetting" style="height: 75rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx; width: 615rpx; position: relative">添加预约</button>
+    <view wx:if="{{appointmentList.length === 0}}">
+      <view class="no-appointment-tip">
+        <view class="tip-icon appointment-icon"></view>
+        <view class="tip-text">暂无复诊提醒</view>
+      </view>
     </view>
-    
-    <!-- 有复诊提醒时显示 -->
-    <view class="appointment-card" wx:if="{{hasAppointment}}">
-      <view class="appointment-header">
-        <!-- 日历式倒计时显示 -->
-        <view class="calendar-countdown">
-          <view class="calendar-header">
-            <view class="calendar-month">{{appointmentMonth}}</view>
+    <scroll-view scroll-x="true" class="appointment-scroll" style="white-space: nowrap; height: 413rpx; display: block; box-sizing: border-box; left: 0rpx; top: 25rpx; position: relative" wx:if="{{appointmentList.length > 0}}">
+      <view class="appointment-card" wx:for="{{appointmentList}}" wx:key="id" style="display: inline-block; width: 300rpx; margin-right: 20rpx;">
+        <view class="appointment-info">
+          <view class="info-item">
+            <view class="info-label">医院</view>
+            <view class="info-value">{{item.hospitalName}}</view>
           </view>
-          <view class="calendar-body">
-            <view class="calendar-date">{{appointmentDay}}</view>
+          <view class="info-item">
+            <view class="info-label">科室</view>
+            <view class="info-value">{{item.department}}</view>
           </view>
-          <view class="countdown-badge">{{appointmentCountdown}}天</view>
+          <view class="info-item">
+            <view class="info-label">日期</view>
+            <view class="info-value">{{item.appointmentDate}}</view>
+          </view>
         </view>
-        <view class="appointment-actions">
-          <view class="edit-btn" bindtap="editAppointment">编辑</view>
-          <view class="delete-btn" bindtap="showDeleteAppointmentModal">删除</view>
-        </view>
+        <button class="subscribe-btn" data-index="{{index}}" bindtap="onSubscribeAppointment" style="width: 300rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">订阅提醒</button>
+        <button class="delete-appointment-btn" data-index="{{index}}" bindtap="onDeleteAppointment" style="width: 300rpx; display: block; box-sizing: border-box; left: 0rpx; top: 0rpx">删除</button>
       </view>
-      <view class="appointment-info">
-        <view class="info-item">
-          <view class="info-label">医院</view>
-          <view class="info-value">{{appointmentInfo.hospitalName}}</view>
-        </view>
-        <view class="info-item">
-          <view class="info-label">科室</view>
-          <view class="info-value">{{appointmentInfo.department}}</view>
-        </view>
-        <view class="info-item">
-          <view class="info-label">日期</view>
-          <view class="info-value">{{appointmentInfo.appointmentDate}}</view>
-        </view>
-        <view class="info-item" wx:if="{{appointmentInfo.notes}}">
-          <view class="info-label">备注</view>
-          <view class="info-value">{{appointmentInfo.notes}}</view>
-        </view>
-      </view>
-      <view class="subscription-tip" wx:if="{{!hasSubscribed}}">
-        <view class="tip-icon"></view>
-        <view class="tip-text">开启订阅消息提醒，不错过复诊时间</view>
-        <button class="subscribe-btn" bindtap="requestSubscription">订阅提醒</button>
-      </view>
-    </view>
-    
-    <!-- 删除复诊提醒确认对话框 -->
-    <view class="modal-mask" wx:if="{{showDeleteAppointmentModal}}" bindtap="hideDeleteAppointmentModal"></view>
-    <view class="delete-modal" wx:if="{{showDeleteAppointmentModal}}">
-      <view class="modal-title">删除复诊提醒</view>
-      <view class="modal-content">确定要删除此复诊提醒吗？此操作不可恢复。</view>
-      <view class="modal-buttons">
-        <button class="cancel-btn" bindtap="hideDeleteAppointmentModal">取消</button>
-        <button class="confirm-btn" bindtap="deleteAppointment">确定删除</button>
-      </view>
-    </view>
+    </scroll-view>
   </view>
   
   <!-- 育儿知识区域 -->
@@ -281,5 +247,16 @@
       <view class="knowledge-desc">4-6个月宝宝如何正确添加辅食</view>
       <view class="knowledge-tag">喂养指南</view>
     </view>
+  </view>
+</view>
+
+<!-- 删除预约确认弹窗 -->
+<view class="modal-mask" wx:if="{{showDeleteAppointmentModal}}" bindtap="hideDeleteAppointmentModal"></view>
+<view class="delete-modal" wx:if="{{showDeleteAppointmentModal}}">
+  <view class="modal-title">删除复诊提醒</view>
+  <view class="modal-content">确定要删除此复诊提醒吗？此操作不可恢复。</view>
+  <view class="modal-buttons">
+    <button class="cancel-btn" bindtap="hideDeleteAppointmentModal">取消</button>
+    <button class="confirm-btn" bindtap="confirmDeleteAppointment">确定删除</button>
   </view>
 </view>

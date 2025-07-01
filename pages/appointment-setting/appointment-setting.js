@@ -17,12 +17,14 @@ Page({
   },
 
   onLoad: function (options) {
-    // 设置最小日期为今天
+    // 设置最小日期为明天，默认日期为明天（用 getDate()+1，确保跨天无误）
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
-    const minDate = `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+    const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1); // 明天0点
+    const tYear = tomorrow.getFullYear();
+    const tMonth = tomorrow.getMonth() + 1;
+    const tDay = tomorrow.getDate();
+    const minDate = `${tYear}-${tMonth < 10 ? '0' + tMonth : tMonth}-${tDay < 10 ? '0' + tDay : tDay}`;
+    const defaultDate = minDate;
 
     // 获取传递的childId参数
     const childId = options.childId || '';
@@ -31,7 +33,8 @@ Page({
     this.setData({
       childId,
       isEdit,
-      minDate
+      minDate,
+      'appointmentInfo.appointmentDate': defaultDate // 默认日期为明天
     });
 
     // 如果是编辑模式，加载现有的复诊信息
@@ -141,16 +144,29 @@ Page({
     const app = getApp();
     app.saveAppointmentInfo(childId, appointmentInfo);
 
-    // 提示保存成功
-    wx.showToast({
-      title: '保存成功',
-      icon: 'success',
-      success: () => {
-        // 延迟返回，让用户看到提示
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 1500);
-      }
+    // 新增：保存成功后立即同步预约数据
+    app.syncAppointments().then(() => {
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success',
+        success: () => {
+          // 延迟返回，让用户看到提示
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        }
+      });
+    }).catch(() => {
+      // 同步失败也提示保存成功，但建议提示用户稍后刷新
+      wx.showToast({
+        title: '保存成功，稍后同步',
+        icon: 'success',
+        success: () => {
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        }
+      });
     });
   }
 });

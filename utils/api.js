@@ -65,6 +65,7 @@ const apiRequest = {
             if (res.data.success) {
               resolve(res.data);
             } else {
+              console.error('后端业务错误:', res.data);
               reject(new Error(res.data.message || '请求失败'));
             }
           } else if (res.statusCode === 401) {
@@ -77,6 +78,8 @@ const apiRequest = {
             });
             reject(new Error('登录已过期，请重新登录'));
           } else {
+            // 新增：打印后端返回的详细错误信息
+            console.error('后端返回错误:', res.statusCode, res.data);
             reject(new Error(`请求失败，状态码：${res.statusCode}`));
           }
         },
@@ -84,7 +87,8 @@ const apiRequest = {
           if (showLoading) {
             wx.hideLoading();
           }
-          console.error('API请求失败:', err);
+          // 新增：打印请求失败的详细信息
+          console.error('API请求失败:', err.message || err);
           reject(new Error('网络请求失败，请检查网络连接'));
         }
       });

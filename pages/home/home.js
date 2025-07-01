@@ -35,6 +35,8 @@ Page({
 		appointmentDay: '', // 复诊日期（用于日历显示）
 		hasSubscribed: false, // 是否已订阅消息
 		showDeleteAppointmentModal: false, // 删除复诊提醒确认对话框
+		appointmentList: [], // 新增：当前宝宝的预约列表
+		deleteAppointmentIndex: null,
 	},
 
 	onLoad: function (options) {
@@ -46,10 +48,18 @@ Page({
 		this.loadChildInfo();
 		// 加载复诊提醒信息
 		this.loadAppointmentInfo();
+		this.loadAppointmentList();
 	},
 
 	onShow: function () {
 		console.log('页面显示中...');
+		// 每次页面显示时同步预约数据
+		const app = getApp();
+		app.syncAppointments().then(() => {
+			this.loadAppointmentList();
+		}).catch(() => {
+			this.loadAppointmentList();
+		});
 		// 每次页面显示时重新加载儿童信息，以便在添加儿童后更新页面
 		this.loadChildInfo();
 
@@ -73,6 +83,7 @@ Page({
 
 		// 重新加载复诊提醒信息
 		this.loadAppointmentInfo();
+		this.loadAppointmentList();
 	},
 
 	// 设置当前日期
@@ -234,7 +245,7 @@ Page({
 			return `${days}天`;
 		}
 
-		// 如果只有月和年，且天数为0，去掉最后的“0天”
+		// 如果只有月和年，且天数为0，去掉最后的"0天"
 		if (days === 0 && (months > 0 || years > 0)) {
 			if (result.endsWith('0天')) { // 理论上不会进入这里因为上面days>0才加天
 				result = result.substring(0, result.length - 2);
@@ -329,6 +340,7 @@ Page({
 
 		// 加载选中宝宝的生长记录
 		this.loadGrowthRecords(currentChild.id, currentChild.name);
+		this.loadAppointmentList();
 	},
 
 	// 显示删除宝宝确认对话框
@@ -793,7 +805,8 @@ Page({
 	// 隐藏删除复诊提醒确认对话框
 	hideDeleteAppointmentModal: function () {
 		this.setData({
-			showDeleteAppointmentModal: false
+			showDeleteAppointmentModal: false,
+			deleteAppointmentIndex: null
 		});
 	},
 
@@ -853,6 +866,81 @@ Page({
 					title: '订阅失败，请稍后重试',
 					icon: 'none'
 				});
+			}
+		});
+	},
+
+	// 加载当前宝宝所有预约
+	loadAppointmentList: function () {
+		const childId = this.data.currentChild.id;
+		if (!childId) {
+			this.setData({ appointmentList: [], hasAppointment: false, appointmentInfo: {} });
+			return;
+		}
+		const storage = wx.getStorageSync('appointmentInfo') || [];
+		const allAppointments = Array.isArray(storage) ? storage : (storage.appointments || []);
+		console.log('本地预约数据', allAppointments);
+		const appointmentList = allAppointments.filter(item => item.childInfo && item.childInfo.id == childId);
+		if (appointmentList.length > 0) {
+			this.setData({
+				appointmentList,
+				hasAppointment: true,
+				appointmentInfo: appointmentList[0]
+			});
+		} else {
+			this.setData({ appointmentList: [], hasAppointment: false, appointmentInfo: {} });
+		}
+	},
+
+	// 点击删除按钮，弹出确认弹窗
+	onDeleteAppointment: function(e) {
+		const index = e.currentTarget.dataset.index;
+		this.setData({
+			showDeleteAppointmentModal: true,
+			deleteAppointmentIndex: index
+		});
+	},
+
+	// 确认删除
+	confirmDeleteAppointment: function() {
+		const index = this.data.deleteAppointmentIndex;
+		if (index === null) return;
+		const appointment = this.data.appointmentList[index];
+		const appointmentId = appointment.id;
+		const app = getApp();
+		const { apiRequest } = require('../../utils/api.js');
+		// 调用后端接口删除
+		apiRequest.delete('/deleteAppointment/' + appointmentId).then(() => {
+			wx.showToast({ title: '删除成功', icon: 'success' });
+			// 同步最新数据
+			app.syncAppointments().then(() => {
+				this.loadAppointmentList();
+			});
+		}).catch(() => {
+			wx.showToast({ title: '删除失败', icon: 'none' });
+		}).finally(() => {
+			this.hideDeleteAppointmentModal();
+		});
+	},
+
+	onSubscribeAppointment: function(e) {
+		const index = e.currentTarget.dataset.index;
+		const appointment = this.data.appointmentList[index];
+		// TODO: 替换为你的实际订阅消息模板ID
+		const tmplId = '请替换为你的模板ID';
+		wx.requestSubscribeMessage({
+			tmplIds: [tmplId],
+			success: (res) => {
+				if (res[tmplId] === 'accept') {
+					wx.showToast({ title: '订阅成功', icon: 'success' });
+					// 可选：调用后端接口记录用户已订阅该预约
+					// 例如：apiRequest.post('/subscribeAppointment', { appointmentId: appointment.id })
+				} else {
+					wx.showToast({ title: '未订阅', icon: 'none' });
+				}
+			},
+			fail: (err) => {
+				wx.showToast({ title: '订阅失败', icon: 'none' });
 			}
 		});
 	},

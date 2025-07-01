@@ -59,14 +59,17 @@ App({
   // 用户登录函数
   syncAppointments() {
     const { API } = require('./utils/api.js');
-
     return API.appointment.getAppointments()
       .then(res => {
+        console.log('后端返回的预约数据', res); // 打印后端返回内容
         if (res && Array.isArray(res)) {
-          // 将预约信息保存到本地存储
           wx.setStorageSync('appointmentInfo', res);
           this.globalData.appointmentInfo = res;
-          console.log('预约信息同步成功');
+          console.log('存储到本地的预约数据', wx.getStorageSync('appointmentInfo'));
+        } else if (res && res.appointments && Array.isArray(res.appointments)) {
+          wx.setStorageSync('appointmentInfo', res.appointments);
+          this.globalData.appointmentInfo = res.appointments;
+          console.log('存储到本地的预约数据', wx.getStorageSync('appointmentInfo'));
         }
       })
       .catch(err => {
@@ -176,6 +179,7 @@ App({
 
   // 添加到同步队列
   addToSyncQueue(item) {
+    console.log('[addToSyncQueue] 加入队列:', item);
     // 获取当前队列
     let queue = this.globalData.pendingSyncData || [];
 
@@ -197,7 +201,17 @@ App({
     }
 
     // 获取待同步队列
-    const queue = this.globalData.pendingSyncData || [];
+    let queue = this.globalData.pendingSyncData || [];
+    // 过滤掉过期或无效的预约同步项
+    queue = queue.filter(item => {
+      if (item.type === 'appointmentInfo' && item.data && item.data.appointmentDate) {
+        const now = new Date();
+        const date = new Date(item.data.appointmentDate);
+        // 只同步未来的预约
+        return date > now;
+      }
+      return true;
+    });
     if (queue.length === 0) {
       return;
     }
@@ -411,6 +425,7 @@ App({
 
   // 保存复诊信息（本地优先，然后尝试同步到服务器）
   saveAppointmentInfo(childId, appointmentInfo) {
+    console.log('[saveAppointmentInfo] childId:', childId, 'appointmentInfo:', appointmentInfo);
     // 保存到本地缓存
     const storageKey = `appointment_${childId}`;
     wx.setStorageSync(storageKey, appointmentInfo);
