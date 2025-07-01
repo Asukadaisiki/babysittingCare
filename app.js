@@ -57,11 +57,29 @@ App({
   },
 
   // 用户登录函数
+  syncAppointments() {
+    const { API } = require('./utils/api.js');
+
+    return API.appointment.getAppointments()
+      .then(res => {
+        if (res && Array.isArray(res)) {
+          // 将预约信息保存到本地存储
+          wx.setStorageSync('appointmentInfo', res);
+          this.globalData.appointmentInfo = res;
+          console.log('预约信息同步成功');
+        }
+      })
+      .catch(err => {
+        console.error('同步预约信息失败:', err);
+      });
+  },
+
+  // 修改login函数，在登录成功后同步预约信息
   login() {
     return new Promise((resolve, reject) => {
       // 引入API模块
       const { API } = require('./utils/api.js');
-      
+
       // 调用微信登录接口获取临时登录凭证code
       wx.login({
         success: loginRes => {
@@ -177,31 +195,31 @@ App({
     if (this.globalData.isDataSyncing || !this.globalData.networkStatus) {
       return;
     }
-  
+
     // 获取待同步队列
     const queue = this.globalData.pendingSyncData || [];
     if (queue.length === 0) {
       return;
     }
-  
+
     // 设置同步状态
     this.globalData.isDataSyncing = true;
-  
+
     // 获取用户的 token
     const token = wx.getStorageSync('token');
     if (!token) {
       this.globalData.isDataSyncing = false;
       return;
     }
-  
+
     // 引入API模块
     const { API } = require('./utils/api.js');
-    
+
     // 处理队列中的每个项目
     const syncPromises = [];
-    
+
     queue.forEach(item => {
-      switch(item.type) {
+      switch (item.type) {
         case 'childInfo':
           // 使用现有的儿童信息相关API
           if (item.data && Array.isArray(item.data)) {
@@ -237,7 +255,7 @@ App({
             });
           }
           break;
-          
+
         case 'appointmentInfo':
           // 使用预约API
           if (item.data && item.childId) {
@@ -247,13 +265,13 @@ App({
               console.error('childId不是有效的数字:', item.childId);
               break;
             }
-            
+
             // 验证必需字段
             if (!item.data.hospitalName || !item.data.department || !item.data.appointmentDate) {
               console.error('预约信息缺少必需字段:', item.data);
               break;
             }
-            
+
             syncPromises.push(
               API.appointment.addAppointment({
                 childId: childId,
@@ -266,23 +284,23 @@ App({
             );
           }
           break;
-          
+
         case 'chatHistory':
           // 聊天历史通过sendMessage API已经自动同步，这里可以跳过
           // 或者可以实现批量同步逻辑
           break;
-          
+
         case 'deleteAppointmentInfo':
           // 如果后端有删除预约的API，在这里调用
           // 目前API文档中没有删除接口，可能需要后端添加
           break;
-          
+
         case 'onlineClassView':
           // 浏览记录可能不需要同步到服务器，或者可以忽略
           break;
       }
     });
-    
+
     // 执行所有同步操作
     Promise.allSettled(syncPromises)
       .then(results => {
@@ -295,17 +313,17 @@ App({
             console.error('同步失败:', result.reason);
           }
         });
-        
+
         // 移除成功同步的项目
         if (successfulIndices.length > 0) {
           const newQueue = queue.filter((item, index) => !successfulIndices.includes(index));
           this.globalData.pendingSyncData = newQueue;
           wx.setStorageSync('pendingSyncData', newQueue);
-          
+
           // 更新最后同步时间
           this.globalData.lastSyncTime = Date.now();
           wx.setStorageSync('lastSyncTime', this.globalData.lastSyncTime);
-          
+
           console.log('数据同步完成，成功:', successfulIndices.length, '失败:', results.length - successfulIndices.length);
         }
       })
@@ -362,7 +380,7 @@ App({
 
         // 引入API模块
         const { API } = require('./utils/api.js');
-        
+
         // 从服务器获取预约信息
         API.appointment.getAppointments({ childId: childId })
           .then(res => {
@@ -494,7 +512,7 @@ App({
 
 //       // 引入API模块
 //       const { API } = require('./utils/api.js');
-      
+
 //       // 从服务器获取聊天历史
 //       API.chat.getChatHistory()
 //         .then(res => {

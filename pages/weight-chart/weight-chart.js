@@ -499,7 +499,7 @@ Page({
         type: 'value',
         name: xAxisLabel,
         nameGap: 30,
-        min: currentStandard === 'WHO' ? 0 : 22, // <-- **请确保这里根据标准动态设置了最小值**
+        min: currentStandard === 'WHO' ? 0 : 0, // <-- **请确保这里根据标准动态设置了最小值**
         max: currentStandard === 'WHO' ? 60 : 40, // <-- **请确保这里根据标准动态设置了最大值**
         interval: currentStandard === 'WHO' ? 6 :2, // <-- **请确保这里根据标准动态设置了间隔**
         nameTextStyle: {

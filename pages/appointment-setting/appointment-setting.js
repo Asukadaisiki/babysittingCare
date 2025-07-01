@@ -41,7 +41,7 @@ Page({
   },
 
   // 加载复诊信息
-  loadAppointmentInfo: function(childId) {
+  loadAppointmentInfo: function (childId) {
     const storageKey = `appointment_${childId}`;
     const appointmentInfo = wx.getStorageSync(storageKey);
 
@@ -58,28 +58,28 @@ Page({
   },
 
   // 医院名称输入事件
-  onHospitalNameInput: function(e) {
+  onHospitalNameInput: function (e) {
     this.setData({
       'appointmentInfo.hospitalName': e.detail.value
     });
   },
 
   // 科室输入事件
-  onDepartmentInput: function(e) {
+  onDepartmentInput: function (e) {
     this.setData({
       'appointmentInfo.department': e.detail.value
     });
   },
 
   // 日期选择事件
-  onDateChange: function(e) {
+  onDateChange: function (e) {
     this.setData({
       'appointmentInfo.appointmentDate': e.detail.value
     });
   },
 
   // 提醒天数选择事件
-  onReminderDaysChange: function(e) {
+  onReminderDaysChange: function (e) {
     const index = parseInt(e.detail.value);
     this.setData({
       reminderDaysIndex: index,
@@ -88,22 +88,22 @@ Page({
   },
 
   // 备注输入事件
-  onNotesInput: function(e) {
+  onNotesInput: function (e) {
     this.setData({
       'appointmentInfo.notes': e.detail.value
     });
   },
 
   // 返回上一页
-  navigateBack: function() {
+  navigateBack: function () {
     wx.navigateBack();
   },
 
   // 保存复诊提醒
-  saveAppointment: function() {
+  saveAppointment: function () {
     const appointmentInfo = this.data.appointmentInfo;
     const childId = this.data.childId;
-  
+
     // 验证必填字段
     if (!appointmentInfo.hospitalName) {
       wx.showToast({
@@ -112,7 +112,7 @@ Page({
       });
       return;
     }
-  
+
     if (!appointmentInfo.department) {
       wx.showToast({
         title: '请输入科室名称',
@@ -120,7 +120,7 @@ Page({
       });
       return;
     }
-  
+
     if (!appointmentInfo.appointmentDate) {
       wx.showToast({
         title: '请选择复诊日期',
@@ -128,19 +128,19 @@ Page({
       });
       return;
     }
-  
+
     // 生成唯一ID
     if (!appointmentInfo.id) {
       appointmentInfo.id = Date.now().toString();
     }
-  
+
     // 设置状态为待提醒
     appointmentInfo.status = 'pending';
-  
+
     // 使用全局方法保存复诊信息
     const app = getApp();
     app.saveAppointmentInfo(childId, appointmentInfo);
-  
+
     // 提示保存成功
     wx.showToast({
       title: '保存成功',

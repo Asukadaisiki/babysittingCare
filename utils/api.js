@@ -4,25 +4,25 @@ const API_CONFIG = {
   BASE_URL: 'https://backend.pinf.top',
   BASE_PATH: '/api',
   TIMEOUT: 10000,
-  
+
   // 获取完整的API URL
   getApiUrl(endpoint) {
     return `${this.BASE_URL}${this.BASE_PATH}${endpoint}`;
   },
-  
+
   // 获取请求头
   getHeaders(includeAuth = true) {
     const headers = {
       'Content-Type': 'application/json',
     };
-    
+
     if (includeAuth) {
       const token = wx.getStorageSync('token');
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
-    
+
     return headers;
   }
 };
@@ -31,7 +31,7 @@ const API_CONFIG = {
 const apiRequest = {
   // 通用请求方法
   request(options) {
-    
+
     return new Promise((resolve, reject) => {
       const {
         url,
@@ -41,7 +41,7 @@ const apiRequest = {
         showLoading = false,
         loadingText = '请求中...'
       } = options;
-      
+
       if (showLoading) {
         wx.showLoading({ title: loadingText });
       }
@@ -60,7 +60,7 @@ const apiRequest = {
           if (showLoading) {
             wx.hideLoading();
           }
-          
+
           if (res.statusCode === 200) {
             if (res.data.success) {
               resolve(res.data);
@@ -90,13 +90,13 @@ const apiRequest = {
       });
     });
   },
-  
+
   // GET请求
   get(url, data = {}, options = {}) {
     // GET请求应该将参数放在URL中，而不是body中
-    const queryString = Object.keys(data).length > 0 ? 
+    const queryString = Object.keys(data).length > 0 ?
       '?' + Object.keys(data).map(key => `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`).join('&') : '';
-    
+
     return this.request({
       url: url + queryString,
       method: 'GET',
@@ -104,7 +104,7 @@ const apiRequest = {
       ...options
     });
   },
-  
+
   // POST请求
   post(url, data = {}, options = {}) {
     return this.request({
@@ -114,7 +114,7 @@ const apiRequest = {
       ...options
     });
   },
-  
+
   // PUT请求
   put(url, data = {}, options = {}) {
     return this.request({
@@ -124,7 +124,7 @@ const apiRequest = {
       ...options
     });
   },
-  
+
   // DELETE请求
   delete(url, data = {}, options = {}) {
     return this.request({
@@ -144,90 +144,90 @@ const API = {
     login(code) {
       return apiRequest.post('/login', { code }, { needAuth: false, showLoading: true, loadingText: '登录中...' });
     },
-    
+
     // 测试登录
     testLogin(openid) {
       return apiRequest.post('/test-login', { openid }, { needAuth: false });
     }
   },
-  
+
   // 儿童管理模块
   child: {
     // 获取儿童信息
     getChildInfo() {
       return apiRequest.get('/getChildInfo');
     },
-    
+
     // 添加儿童信息
     addChild(childData) {
       return apiRequest.post('/addChild', childData, { showLoading: true, loadingText: '添加中...' });
     },
-    
+
     // 添加生长记录
     addGrowthRecord(recordData) {
       return apiRequest.post('/addGrowthRecord', recordData, { showLoading: true, loadingText: '保存中...' });
     }
   },
-  
+
   // 内容管理模块
   content: {
     // 获取视频列表
     getVideos(params = {}) {
       return apiRequest.get('/getVideos', params);
     },
-    
+
     // 获取视频详情
     getVideoDetail(videoId) {
       return apiRequest.get(`/getVideoDetail/${videoId}`);
     },
-    
+
     // 获取文章列表
     getArticles(params = {}) {
       return apiRequest.get('/getArticles', params);
     },
-    
+
     // 获取文章详情
     getArticleDetail(articleId) {
       return apiRequest.get(`/getArticleDetail/${articleId}`);
     },
-    
+
     // 搜索内容
     searchContent(params) {
       return apiRequest.get('/searchContent', params);
     }
   },
-  
+
   // 预约管理模块
   appointment: {
     // 获取预约列表
     getAppointments(params = {}) {
-      return apiRequest.get('/getAppointments', params);
+      return apiRequest.get('/getAppointments', params, { showLoading: true, loadingText: '同步预约信息...' });
     },
-    
+
     // 添加预约
     addAppointment(appointmentData) {
       return apiRequest.post('/addAppointment', appointmentData, { showLoading: true, loadingText: '创建预约中...' });
     }
   },
-  
+
   // 聊天管理模块
   chat: {
     // 发送消息
     sendMessage(messageData) {
       return apiRequest.post('/sendMessage', messageData);
     },
-    
+
     // 获取聊天历史
     // getChatHistory(params = {}) {
     //   return apiRequest.get('/getChatHistory', params);
     // },
-    
+
     // 清空聊天历史
     clearChatHistory() {
       return apiRequest.delete('/clearChatHistory');
     }
   },
-  
+
   // 健康检查
   health() {
     return apiRequest.get('/health', {}, { needAuth: false });

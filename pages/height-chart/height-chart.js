@@ -512,7 +512,7 @@ Page({
       xAxis: {
         type: 'value',
         name: xAxisLabel,
-        min: currentStandard === 'WHO' ? 0 : 22, // <-- **请确保这里根据标准动态设置了最小值**
+        min: currentStandard === 'WHO' ? 0 : 0, // <-- **请确保这里根据标准动态设置了最小值**
         max: currentStandard === 'WHO' ? 60 : 40, // <-- **请确保这里根据标准动态设置了最大值**
         interval: currentStandard === 'WHO' ? 6 : 2, // <-- **请确保这里根据标准动态设置了间隔**
         nameTextStyle: {
@@ -525,7 +525,7 @@ Page({
       yAxis: {
         type: 'value',
         name: '头围（cm）',
-        min: currentStandard === 'WHO' ? 45 : 25, // WHO标准最小30，Fenton最小20
+        min: currentStandard === 'WHO' ? 0 : 0, // WHO标准最小30，Fenton最小20
         max: currentStandard === 'WHO' ? 120 : 60, // WHO标准最大55，Fenton最大45
         interval: currentStandard === 'WHO' ? 15 : 8, // 两个标准间隔都是5
         nameTextStyle: {
