@@ -4,7 +4,6 @@
     "pages/home/home",
     "pages/ai-qa/ai-qa",
     "pages/onlineClass/onlineClass",
-    "pages/settings/settings",
     "pages/info-collection/info-collection",
     "pages/baby-info/baby-info",
     "pages/notifications/notifications",
@@ -36,11 +35,6 @@
         "pagePath": "pages/onlineClass/onlineClass",
         "iconPath": "/images/tabs/onlineClass.png",
         "text": "在线课堂"
-      },
-      {
-        "pagePath": "pages/settings/settings",
-        "iconPath": "/images/tabs/setting.png",
-        "text": "设置"
       }
     ]
   },

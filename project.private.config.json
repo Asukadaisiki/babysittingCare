@@ -13,7 +13,7 @@
       ]
     }
   },
-  "libVersion": "3.8.10",
+  "libVersion": "3.8.9",
   "setting": {
     "compileHotReLoad": true,
     "urlCheck": false,
