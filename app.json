@@ -2,7 +2,7 @@
   "pages": [
     "pages/index/index",
     "pages/home/home",
-    "pages/ai-qa/ai-qa",
+    "pages/qa/qa",
     "pages/onlineClass/onlineClass",
     "pages/info-collection/info-collection",
     "pages/baby-info/baby-info",
@@ -23,7 +23,7 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/ai-qa/ai-qa",
+        "pagePath": "pages/qa/qa",
         "iconPath": "/images/tabs/AI.png",
         "text": "AI-问答"
       },
