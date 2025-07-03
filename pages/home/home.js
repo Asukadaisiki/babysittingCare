@@ -928,13 +928,30 @@ Page({
 		const appointment = this.data.appointmentList[index];
 		// TODO: 替换为你的实际订阅消息模板ID
 		const tmplId = '请替换为你的模板ID';
+		const openid = wx.getStorageSync('openid');
+		// 计算提醒时间（如提前 reminderDays 天）
+		const appointmentDate = new Date(appointment.appointmentDate);
+		const remindTime = new Date(appointmentDate.getTime() - (appointment.reminderDays || 1) * 24 * 60 * 60 * 1000);
+		// 格式化提醒时间为 'YYYY-MM-DD HH:mm:ss'
+		const pad = n => n < 10 ? '0' + n : n;
+		const remindTimeStr = `${remindTime.getFullYear()}-${pad(remindTime.getMonth() + 1)}-${pad(remindTime.getDate())} 09:00:00`;
+
 		wx.requestSubscribeMessage({
 			tmplIds: [tmplId],
 			success: (res) => {
 				if (res[tmplId] === 'accept') {
-					wx.showToast({ title: '订阅成功', icon: 'success' });
-					// 可选：调用后端接口记录用户已订阅该预约
-					// 例如：apiRequest.post('/subscribeAppointment', { appointmentId: appointment.id })
+					// 订阅成功后，调用后端接口记录订阅
+					const { apiRequest } = require('../../utils/api.js');
+					apiRequest.post('/subscribeAppointment', {
+						openid,
+						appointmentId: appointment.id,
+						tmplId,
+						remindTime: remindTimeStr
+					}).then(() => {
+						wx.showToast({ title: '订阅成功', icon: 'success' });
+					}).catch(() => {
+						wx.showToast({ title: '订阅失败', icon: 'none' });
+					});
 				} else {
 					wx.showToast({ title: '未订阅', icon: 'none' });
 				}
