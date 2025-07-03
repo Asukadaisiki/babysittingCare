@@ -35,7 +35,7 @@
   flex-direction: row;
 }
 
-.message.ai {
+.message.zhinen {
   align-self: flex-start;
 }
 
@@ -67,7 +67,7 @@
   color: #333;
 }
 
-.message.ai .message-content {
+.message.zhinen .message-content {
   background-color: #f8d7cb;
   color: #333;
 }

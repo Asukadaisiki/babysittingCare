@@ -15,6 +15,31 @@ Page({
   },
 
   /**
+   * 生命周期函数--监听页面加载
+   */
+  onLoad(options) {
+    // 获取用户ID
+    const userId = wx.getStorageSync('openid') || '';
+
+    this.setData({
+      userId
+    });
+
+    // 加载本地历史消息
+    const history = wx.getStorageSync('qa_message_history') || [];
+    if (history.length > 0) {
+      this.setData({ messageList: history });
+    } else {
+      // 默认欢迎消息
+      this.setData({
+        messageList: [
+          { type: 'zhinen', content: '您好，我是智能小护，有什么育儿问题可以随时问我哦~' }
+        ]
+      });
+    }
+  },
+
+  /**
    * 输入框内容变化处理
    */
   onInputChange(e) {
@@ -25,38 +50,30 @@ Page({
    * 发送消息
    */
   sendMessage() {
-    const { inputValue, messageList, userId } = this.data;
-
-    // 检查输入是否为空
-    if (!inputValue.trim()) return;
-
-    // 添加用户消息到列表
-    const userMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputValue,
-      time: new Date().getTime(),
-      status: 'sent'
-    };
-
-    const newMessageList = [...messageList, userMessage];
-
+    const content = this.data.inputValue.trim();
+    if (!content) return;
+    const newList = this.data.messageList.concat([{ type: 'user', content }]);
     this.setData({
-      messageList: newMessageList,
+      messageList: newList,
       inputValue: '',
       loading: true
+    }, () => {
+      this.setData({ scrollToView: 'msg' + (newList.length - 1) });
     });
-
-    // 保存消息到全局
-    if (userId) {
-      app.saveChatMessage(userId, userMessage);
-    }
-
-    // 滚动到底部
-    this.scrollToBottom();
-
-    // 模拟请求后端API
-    this.requestAIResponse(inputValue);
+    // 保存历史
+    wx.setStorageSync('qa_message_history', newList);
+    // 模拟智能回复
+    setTimeout(() => {
+      const reply = { type: 'zhinen', content: '智能小护已收到您的问题：' + content };
+      const updatedList = this.data.messageList.concat([reply]);
+      this.setData({
+        messageList: updatedList,
+        loading: false
+      }, () => {
+        this.setData({ scrollToView: 'msg' + (updatedList.length - 1) });
+      });
+      wx.setStorageSync('qa_message_history', updatedList);
+    }, 1000);
   },
 
   /**
@@ -196,30 +213,6 @@ Page({
         }
       }
     });
-  },
-
-  /**
-   * 生命周期函数--监听页面加载
-   */
-  onLoad(options) {
-    // 获取用户ID
-    const userId = wx.getStorageSync('openid') || '';
-
-    this.setData({
-      userId
-    });
-
-    // 获取聊天历史
-    if (userId) {
-      // 从本地存储获取聊天历史
-      const storageKey = `chat_history_${userId}`;
-      const chatHistory = wx.getStorageSync(storageKey);
-      if (chatHistory && chatHistory.messageList) {
-        this.setData({
-          messageList: chatHistory.messageList
-        });
-      }
-    }
   },
 
   /**

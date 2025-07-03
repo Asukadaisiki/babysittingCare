@@ -3,16 +3,6 @@
   <!-- 聊天消息区域 -->
   <scroll-view scroll-y="true" class="chat-container" scroll-into-view="{{scrollToView}}">
     <view class="message-list">
-      <!-- 欢迎消息 -->
-      <view class="message ai">
-        <view class="avatar-container">
-          <image class="avatar" src="/images/nurse-icon.svg"></image>
-        </view>
-        <view class="message-content">
-          <text>您好，我是AI智慧小护，有什么育儿问题可以随时问我哦~</text>
-        </view>
-      </view>
-      
       <!-- 动态消息列表 -->
       <block wx:for="{{messageList}}" wx:key="index">
         <!-- 用户消息 -->
@@ -26,7 +16,7 @@
         </view>
         
         <!-- AI回复消息 -->
-        <view wx:else class="message ai">
+        <view wx:else class="message zhinen">
           <view class="avatar-container">
             <image class="avatar" src="/images/nurse-icon.svg"></image>
           </view>
@@ -37,7 +27,7 @@
       </block>
       
       <!-- 加载中提示 -->
-      <view wx:if="{{loading}}" class="message ai">
+      <view wx:if="{{loading}}" class="message zhinen">
         <view class="avatar-container">
           <image class="avatar" src="/images/nurse-icon.svg"></image>
         </view>
