@@ -15,8 +15,8 @@
           </view>
         </view>
         
-        <!-- AI回复消息 -->
-        <view wx:else class="message zhinen">
+        <!-- 回复消息 -->
+        <view wx:elif="{{item.type === 'zhinen'}}" class="message zhinen">
           <view class="avatar-container">
             <image class="avatar" src="/images/nurse-icon.svg"></image>
           </view>

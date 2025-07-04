@@ -1,5 +1,6 @@
 // pages/ai-qa/ai-qa.js
 const app = getApp(); // 获取全局应用实例
+// 移除marked和towxml引入
 
 Page({
 
@@ -60,20 +61,43 @@ Page({
     }, () => {
       this.setData({ scrollToView: 'msg' + (newList.length - 1) });
     });
-    // 保存历史
     wx.setStorageSync('qa_message_history', newList);
-    // 模拟智能回复
-    setTimeout(() => {
-      const reply = { type: 'zhinen', content: '智能小护已收到您的问题：' + content };
-      const updatedList = this.data.messageList.concat([reply]);
-      this.setData({
-        messageList: updatedList,
-        loading: false
-      }, () => {
-        this.setData({ scrollToView: 'msg' + (updatedList.length - 1) });
-      });
-      wx.setStorageSync('qa_message_history', updatedList);
-    }, 1000);
+
+    wx.request({
+      url: 'https://flow.pinf.top/v1/chat-messages',
+      method: 'POST',
+      header: {
+        'Authorization': 'Bearer app-WynlMqF7dnDHP5AmIvJtx4Vs',
+        'Content-Type': 'application/json'
+      },
+      data: {
+        inputs: {},
+        query: content,
+        response_mode: 'blocking',
+        user: this.data.userId || 'test-user-qa'
+      },
+      success: (res) => {
+        const answer = res.data && res.data.answer ? res.data.answer : '抱歉，未能获取到答案。';
+        const updatedList = this.data.messageList.concat([{ type: 'zhinen', content: answer }]);
+        this.setData({
+          messageList: updatedList,
+          loading: false
+        }, () => {
+          this.setData({ scrollToView: 'msg' + (updatedList.length - 1) });
+        });
+        wx.setStorageSync('qa_message_history', updatedList);
+      },
+      fail: (err) => {
+        const updatedList = this.data.messageList.concat([{ type: 'zhinen', content: '网络异常，请稍后再试。' }]);
+        this.setData({
+          messageList: updatedList,
+          loading: false
+        }, () => {
+          this.setData({ scrollToView: 'msg' + (updatedList.length - 1) });
+        });
+        wx.setStorageSync('qa_message_history', updatedList);
+      }
+    });
   },
 
   /**
