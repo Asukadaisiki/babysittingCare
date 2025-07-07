@@ -44,12 +44,12 @@
       <view class="age-info" style="width: 615rpx; display: flex; box-sizing: border-box; left: 0rpx; top: 0rpx">
         <view class="age-item">
           <view class="age-label">实际年龄</view>
-          <view class="age-value">{{actualAgeString}}个月</view>
+          <view class="age-value">{{actualAgeString}}</view>  <!-- 移除多余的"个月" -->
         </view>
         <view class="age-divider"></view>
         <view class="age-item">
           <view class="age-label">矫正年龄</view>
-          <view class="age-value">{{correctedAgeString}}个月</view>
+          <view class="age-value">{{correctedAgeString}}</view>  <!-- 移除多余的"个月" -->
           <view class="age-tip">基于预产期计算</view>
         </view>
       </view>

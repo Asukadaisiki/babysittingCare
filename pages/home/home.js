@@ -101,10 +101,9 @@ Page({
 	},
 
 	// 加载儿童信息
-	// 加载儿童信息
 	loadChildInfo: function () {
 		let childInfo = wx.getStorageSync('childInfo') || [];
-		
+
 		// 为现有的儿童信息添加 ID 字段（兼容性处理）
 		let needUpdate = false;
 		childInfo = childInfo.map(child => {
@@ -114,7 +113,7 @@ Page({
 			}
 			return child;
 		});
-		
+
 		// 如果有更新，保存回本地存储
 		if (needUpdate) {
 			wx.setStorageSync('childInfo', childInfo);
@@ -129,19 +128,19 @@ Page({
 			const ages = this.calculateAges(
 				currentChild.birthDate,
 				currentChild.expectedDate,
-				currentChild.gestationalWeeks
+				currentChild.gestationalAge  // 使用gestationalAge而不是gestationalWeeks
 			);
 
 			this.setData({
 				childInfo,
 				hasChild: true,
 				currentChild,
-				actualAgeString: ages.actualAgeString,
-				correctedAgeString: ages.correctedAgeString
+				actualAge: ages.actualAge,         // 修改这里
+				correctedAge: ages.correctedAge    // 修改这里
 			});
 
 			// 加载生长记录
-		this.loadGrowthRecords(currentChild.id, currentChild.name);
+			this.loadGrowthRecords(currentChild.id, currentChild.name);
 		} else {
 			this.setData({
 				hasChild: false,
@@ -159,30 +158,29 @@ Page({
 		const actualAgeString = this.formatAgeString(birthDate, today);
 
 		let correctedAgeString = '';
-		if (expectedDateStr) {
-			const expectedDate = new Date(expectedDateStr);
+		if (gestationalWeeks) {
+			// 计算出生后的实际周龄
+			const actualWeeks = Math.floor((today - birthDate) / (7 * 24 * 60 * 60 * 1000));
 
-			// 如果有周龄信息，可以更精确地计算矫正月龄
-			// 足月通常为40周，如果早于40周出生，需要进行矫正
-			if (gestationalWeeks && gestationalWeeks < 40) {
-				// 计算需要矫正的周数
-				const weeksToCorrect = 40 - gestationalWeeks;
-				// 将出生日期调整为矫正后的日期（向后推迟相应的周数）
-				const correctedBirthDate = new Date(birthDate);
-				correctedBirthDate.setDate(correctedBirthDate.getDate() + (weeksToCorrect * 7));
+			// 计算需要矫正的周数（以40周为标准）
+			const weeksToCorrect = 40 - gestationalWeeks;
 
-				// 使用矫正后的出生日期计算矫正月龄
-				correctedAgeString = this.formatAgeString(correctedBirthDate, today);
-			} else {
-				// 如果没有周龄信息或已足月，使用预产期计算
-				correctedAgeString = this.formatAgeString(expectedDate, today);
-			}
+			// 计算矫正后的周龄
+			const correctedWeeks = actualWeeks + weeksToCorrect;
+
+			// 将周转换为月（约4.348周等于1个月）
+			const correctedMonths = Math.floor(correctedWeeks / 4.348);
+
+			// 格式化显示，确保包含"个月"
+			correctedAgeString = `${correctedMonths}个月`;
 		} else {
-			// 如果没有预产期信息，则矫正月龄与实际月龄相同
 			correctedAgeString = actualAgeString;
 		}
 
-		return { actualAgeString, correctedAgeString };
+		return {
+			actualAgeString,
+			correctedAgeString
+		};
 	},
 
 	// 格式化月龄字符串
@@ -538,11 +536,11 @@ Page({
 		});
 
 		// 保存到本地存储
-	if (this.data.currentChild && this.data.currentChild.name) {
-		const currentChild = this.data.currentChild;
-		const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
-		wx.setStorageSync(storageKey, updatedRecords);
-	}
+		if (this.data.currentChild && this.data.currentChild.name) {
+			const currentChild = this.data.currentChild;
+			const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
+			wx.setStorageSync(storageKey, updatedRecords);
+		}
 
 		// 更新页面数据
 		this.setData({
@@ -570,13 +568,13 @@ Page({
 	},
 
 	// 加载生长记录方法
-	loadGrowthRecords: function(childId, childName) {
+	loadGrowthRecords: function (childId, childName) {
 		// 向后兼容：如果只传了一个参数，当作 childName 处理
 		if (arguments.length === 1) {
 			childName = childId;
 			childId = null;
 		}
-		
+
 		if (!childName && !childId) {
 			console.warn('childId和childName都为空，无法加载生长记录');
 			return;
@@ -585,7 +583,7 @@ Page({
 		// 优先使用 ID，如果没有 ID 则使用姓名（向后兼容）
 		const storageKey = childId ? `growthRecords_${childId}` : `growthRecords_${childName}`;
 		let growthRecords = wx.getStorageSync(storageKey) || [];
-		
+
 		// 如果使用 ID 没有找到数据，但有姓名，尝试从旧的姓名键迁移数据
 		if (growthRecords.length === 0 && childId && childName) {
 			const oldStorageKey = `growthRecords_${childName}`;
@@ -893,7 +891,7 @@ Page({
 	},
 
 	// 点击删除按钮，弹出确认弹窗
-	onDeleteAppointment: function(e) {
+	onDeleteAppointment: function (e) {
 		const index = e.currentTarget.dataset.index;
 		this.setData({
 			showDeleteAppointmentModal: true,
@@ -902,7 +900,7 @@ Page({
 	},
 
 	// 确认删除
-	confirmDeleteAppointment: function() {
+	confirmDeleteAppointment: function () {
 		const index = this.data.deleteAppointmentIndex;
 		if (index === null) return;
 		const appointment = this.data.appointmentList[index];
@@ -923,7 +921,7 @@ Page({
 		});
 	},
 
-	onSubscribeAppointment: function(e) {
+	onSubscribeAppointment: function (e) {
 		const index = e.currentTarget.dataset.index;
 		const appointment = this.data.appointmentList[index];
 		// TODO: 替换为你的实际订阅消息模板ID
