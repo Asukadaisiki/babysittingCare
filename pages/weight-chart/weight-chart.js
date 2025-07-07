@@ -9,6 +9,7 @@ Page({
     childInfo: {},
     canvasWidth: 0,
     canvasHeight: 0,
+    latestAnalysis: null,
     // 直接初始化示例数据
     ec: {
       onInit: function (canvas, width, weight, dpr) {
@@ -227,7 +228,7 @@ Page({
     if (currentChild && (currentChild.id || currentChild.name)) {
       const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
       growthRecords = wx.getStorageSync(storageKey) || [];
-      
+
       // 数据迁移：如果使用ID作为键但没有数据，尝试从旧的姓名键加载
       if (growthRecords.length === 0 && currentChild.id && currentChild.name) {
         const oldStorageKey = `growthRecords_${currentChild.name}`;
@@ -501,7 +502,7 @@ Page({
         nameGap: 30,
         min: currentStandard === 'WHO' ? 0 : 0, // <-- **请确保这里根据标准动态设置了最小值**
         max: currentStandard === 'WHO' ? 60 : 40, // <-- **请确保这里根据标准动态设置了最大值**
-        interval: currentStandard === 'WHO' ? 6 :2, // <-- **请确保这里根据标准动态设置了间隔**
+        interval: currentStandard === 'WHO' ? 6 : 2, // <-- **请确保这里根据标准动态设置了间隔**
         nameTextStyle: {
           fontSize: 12
         },
@@ -515,7 +516,7 @@ Page({
         nameGap: 50,
         min: currentStandard === 'WHO' ? 0 : 0, // WHO标准最小2，Fenton最小0
         max: currentStandard === 'WHO' ? 30 : 3, // WHO标准最大25，Fenton最大6
-        interval: currentStandard === 'WHO' ?6 : 0.5, // 两个标准间隔都是1
+        interval: currentStandard === 'WHO' ? 6 : 0.5, // 两个标准间隔都是1
         nameTextStyle: {
           fontSize: 12
         },
@@ -525,7 +526,50 @@ Page({
       },
       series: series // 使用构建好的 series 数组
     };
+    if (userGrowthData.length > 0) {
+      // 获取最新的用户数据点
+      const latestData = userGrowthData[userGrowthData.length - 1];
+      const age = latestData[0];
+      const weight = latestData[1];
 
+      // 找到对应年龄的标准数据
+      const standardData = chartData.find(item => item.age === age);
+
+      if (standardData) {
+        let status = '';
+        let statusText = '';
+
+        if (weight < standardData.p3) {
+          status = 'abnormal';
+          statusText = '异常';
+        } else if (weight >= standardData.p3 && weight < (currentStandard === 'WHO' ? standardData.p15 : standardData.p10)) {
+          status = 'below-average';
+          statusText = '中等偏下';
+        } else if (weight >= (currentStandard === 'WHO' ? standardData.p15 : standardData.p10) &&
+          weight <= (currentStandard === 'WHO' ? standardData.p85 : standardData.p90)) {
+          status = 'average';
+          statusText = '中等';
+        } else if (weight > (currentStandard === 'WHO' ? standardData.p85 : standardData.p90) &&
+          weight <= standardData.p97) {
+          status = 'above-average';
+          statusText = '中等偏上';
+        } else if (weight > standardData.p97) {
+          status = 'exceptional';
+          statusText = '超常';
+        }
+
+        // 更新分析结果
+        this.setData({
+          latestAnalysis: {
+            date: new Date().toLocaleDateString(),
+            age: age,
+            weight: weight,
+            status: status,
+            statusText: statusText
+          }
+        });
+      }
+    }
     // 使用 this.chart 而不是 chart
     if (this.chart) {
       this.chart.setOption(option);

@@ -6,4 +6,28 @@
     <view class="button {{currentStandard === 'WHO' ? 'active' : ''}}" bindtap="switchToWHO">WHO曲线</view>
     <view class="button {{currentStandard === 'Fenton' ? 'active' : ''}}" bindtap="switchToFenton">Fenton曲线</view>
   </view>
+
+  <view class="analysis-result" wx:if="{{latestAnalysis}}">
+    <view class="result-title">最新测量结果分析</view>
+    <view class="result-content">
+      <view class="result-item">
+        <text class="label">测量日期：</text>
+        <text class="value">{{latestAnalysis.date}}</text>
+      </view>
+      <view class="result-item">
+        <text class="label">年龄：</text>
+        <text class="value">{{latestAnalysis.age}}{{currentStandard === 'WHO' ? '月' : '周'}}</text>
+      </view>
+      <view class="result-item">
+        <text class="label">体重：</text>
+        <text class="value">{{latestAnalysis.headCircumference}}cm</text>
+      </view>
+      <view class="result-item">
+        <text class="label">发育情况：</text>
+        <text class="value status-{{latestAnalysis.status}}">{{latestAnalysis.statusText}}</text>
+      </view>
+    </view>
+  </view>
 </view>
+
+

@@ -1,4 +1,4 @@
-// pages/ai-qa/ai-qa.js
+
 const app = getApp(); // 获取全局应用实例
 // 移除marked和towxml引入
 

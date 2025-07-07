@@ -11,6 +11,7 @@ Page({
     childInfo: {},
     canvasWidth: 0,
     canvasHeight: 0,
+    latestAnalysis: null,
     // 直接初始化示例数据
     ec: {
       onInit: function (canvas, width, height, dpr) {
@@ -235,7 +236,7 @@ Page({
     if (currentChild && (currentChild.id || currentChild.name)) {
       const storageKey = currentChild.id ? `growthRecords_${currentChild.id}` : `growthRecords_${currentChild.name}`;
       growthRecords = wx.getStorageSync(storageKey) || [];
-      
+
       // 数据迁移：如果使用ID作为键但没有数据，尝试从旧的姓名键加载
       if (growthRecords.length === 0 && currentChild.id && currentChild.name) {
         const oldStorageKey = `growthRecords_${currentChild.name}`;
@@ -531,17 +532,61 @@ Page({
       },
       series: series // 使用构建好的 series 数组
     };
+    if (userGrowthData.length > 0) {
+      // 获取最新的用户数据点
+      const latestData = userGrowthData[userGrowthData.length - 1];
+      const age = latestData[0];
+      const headCircumference = latestData[1];
 
+      // 找到对应年龄的标准数据
+      const standardData = chartData.find(item => item.age === age);
+
+      if (standardData) {
+        let status = '';
+        let statusText = '';
+
+        if (headCircumference < standardData.p3) {
+          status = 'abnormal';
+          statusText = '异常';
+        } else if (headCircumference >= standardData.p3 && headCircumference < (currentStandard === 'WHO' ? standardData.p15 : standardData.p10)) {
+          status = 'below-average';
+          statusText = '中等偏下';
+        } else if (headCircumference >= (currentStandard === 'WHO' ? standardData.p15 : standardData.p10) &&
+          headCircumference <= (currentStandard === 'WHO' ? standardData.p85 : standardData.p90)) {
+          status = 'average';
+          statusText = '中等';
+        } else if (headCircumference > (currentStandard === 'WHO' ? standardData.p85 : standardData.p90) &&
+          headCircumference <= standardData.p97) {
+          status = 'above-average';
+          statusText = '中等偏上';
+        } else if (headCircumference > standardData.p97) {
+          status = 'exceptional';
+          statusText = '超常';
+        }
+
+        // 更新分析结果
+        this.setData({
+          latestAnalysis: {
+            date: new Date().toLocaleDateString(),
+            age: age,
+            headCircumference: headCircumference,
+            status: status,
+            statusText: statusText
+          }
+        });
+      }
+    }
     // 使用 this.chart 而不是 chart
     if (this.chart) {
-     this.chart.setOption(option);
+      this.chart.setOption(option);
     }
+
   },
   // ... existing code ...
-
   navigateBack: function () {
     wx.navigateBack();
-  }
+  },
+
 });
 
 
